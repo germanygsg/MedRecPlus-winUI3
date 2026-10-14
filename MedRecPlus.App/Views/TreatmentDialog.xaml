@@ -1,0 +1,17 @@
+<ContentDialog
+    x:Class="MedRecPlus.App.Views.TreatmentDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="New treatment"
+    PrimaryButtonText="Save"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    Style="{StaticResource AppDialogStyle}">
+
+    <StackPanel Spacing="10" MinWidth="360">
+        <TextBox x:Name="NameBox" Header="Name *" />
+        <TextBox x:Name="DescBox" Header="Description" />
+        <TextBox x:Name="PriceBox" Header="Price (Rp) *" PlaceholderText="e.g. 300000" InputScope="Number" />
+        <TextBlock x:Name="ErrorText" Foreground="Red" TextWrapping="Wrap" Visibility="Collapsed" />
+    </StackPanel>
+</ContentDialog>

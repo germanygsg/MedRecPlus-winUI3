@@ -1,0 +1,70 @@
+<ContentDialog
+    x:Class="MedRecPlus.App.Views.PatientDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Patient"
+    PrimaryButtonText="Save"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    Style="{StaticResource AppDialogStyle}">
+
+    <ContentDialog.Resources>
+        <x:Double x:Key="ContentDialogMaxWidth">560</x:Double>
+    </ContentDialog.Resources>
+
+    <ScrollViewer MaxHeight="560">
+        <StackPanel Spacing="10" Padding="0,0,12,0">
+            <TextBox x:Name="RecordNumberBox" Header="Record number" IsReadOnly="True" />
+            <TextBox x:Name="NameBox" Header="Patient name *" PlaceholderText="Full name" />
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <ComboBox x:Name="GenderBox" Header="Gender *" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="Mr." /><ComboBoxItem Content="Ms." /><ComboBoxItem Content="Mx." />
+                </ComboBox>
+                <NumberBox x:Name="AgeBox" Grid.Column="1" Header="Age *" Minimum="0" Maximum="150" />
+            </Grid>
+            <TextBox x:Name="PhoneBox" Header="Phone number" InputScope="TelephoneNumber" />
+            <TextBox x:Name="AddressBox" Header="Address" />
+
+            <TextBlock Text="ICD-11 diagnosis codes" FontWeight="SemiBold" />
+            <TextBox x:Name="IcdSearchBox" PlaceholderText="Type to search ICD-11 (min 2 chars)…"
+                     TextChanged="IcdSearchBox_TextChanged" />
+            <TextBlock x:Name="IcdSearchStatus" TextWrapping="Wrap" Visibility="Collapsed"
+                       AutomationProperties.LiveSetting="Polite" />
+            <ListView x:Name="IcdResults" MaxHeight="140" IsItemClickEnabled="True"
+                      ItemClick="IcdResult_Click" SelectionMode="None" Visibility="Collapsed">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding Code}" FontWeight="SemiBold" Width="90" />
+                            <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <ListView x:Name="IcdSelected" SelectionMode="None" MaxHeight="120">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Display}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="✕" Click="IcdRemove_Click" Tag="{Binding Code}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <TextBox x:Name="DiagnosisBox" Header="Initial diagnosis" AcceptsReturn="True"
+                     TextWrapping="Wrap" MinHeight="64" />
+            <ComboBox x:Name="BasisBox" Header="Lawful basis *" HorizontalAlignment="Stretch"
+                      PlaceholderText="Select lawful basis (required)">
+                <ComboBoxItem Content="Explicit consent" Tag="explicit_consent" />
+                <ComboBoxItem Content="Contract" Tag="contract" />
+                <ComboBoxItem Content="Legal obligation" Tag="legal_obligation" />
+                <ComboBoxItem Content="Vital interests" Tag="vital_interests" />
+                <ComboBoxItem Content="Public health" Tag="public_health" />
+            </ComboBox>
+            <TextBlock x:Name="ErrorText" Foreground="Red" TextWrapping="Wrap" Visibility="Collapsed" />
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

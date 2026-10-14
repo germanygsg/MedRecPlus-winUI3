@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Platforms>x64</Platforms>
+    <AssemblyName>MedRecPlus.SmokeTest</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MedRecPlus.Core\MedRecPlus.Core.csproj" />
+    <None Include="..\MedRecPlus.App\icd11.db" Link="icd11.db" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

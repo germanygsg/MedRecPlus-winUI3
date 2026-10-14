@@ -1,0 +1,21 @@
+<Page
+    x:Class="MedRecPlus.App.Views.UnlockPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel MaxWidth="400" Spacing="12" Padding="24"
+                    VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="MedRecPlus Offline" FontSize="28" FontWeight="Bold" />
+            <TextBlock Text="Enter your password to unlock the clinic database."
+                       TextWrapping="Wrap" Opacity="0.7" />
+            <PasswordBox x:Name="PasswordBox" Header="Password" KeyDown="PasswordBox_KeyDown" />
+            <TextBlock x:Name="ErrorText" Foreground="Red" TextWrapping="Wrap" Visibility="Collapsed" />
+            <Button Content="Unlock" Click="Unlock_Click"
+                    Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" />
+            <HyperlinkButton Content="Forgot password? Emergency unlock (wipes all data)"
+                             Click="EmergencyUnlock_Click"
+                             HorizontalAlignment="Center" Margin="0,8,0,0" />
+        </StackPanel>
+    </Grid>
+</Page>

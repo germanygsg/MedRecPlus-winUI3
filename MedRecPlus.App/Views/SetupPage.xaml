@@ -1,0 +1,25 @@
+<Page
+    x:Class="MedRecPlus.App.Views.SetupPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel MaxWidth="480" Spacing="12" Padding="24"
+                    VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="MedRecPlus Offline" FontSize="28" FontWeight="Bold" />
+            <TextBlock Text="First-time setup — this creates your encrypted clinic database. Everything stays on this PC."
+                       TextWrapping="Wrap" Opacity="0.7" />
+
+            <TextBox x:Name="ClinicNameBox" Header="Clinic name" PlaceholderText="e.g. Klinik Sehat" />
+            <TextBox x:Name="OperatorNameBox" Header="Your name (operator)" PlaceholderText="e.g. Dr. Maya" />
+            <PasswordBox x:Name="PasswordBox" Header="Password" PlaceholderText="Min 8 chars, upper, number, symbol" />
+            <PasswordBox x:Name="ConfirmBox" Header="Confirm password" />
+
+            <TextBlock x:Name="ErrorText" Foreground="Red" TextWrapping="Wrap" Visibility="Collapsed" />
+            <Button Content="Create encrypted database" Click="Setup_Click"
+                    Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" />
+            <TextBlock Text="The password encrypts the whole database (SQLCipher + Argon2id). There is no recovery if you forget it."
+                       TextWrapping="Wrap" Opacity="0.6" FontSize="12" />
+        </StackPanel>
+    </Grid>
+</Page>

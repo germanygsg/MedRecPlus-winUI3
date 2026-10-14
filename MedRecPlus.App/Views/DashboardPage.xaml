@@ -1,0 +1,70 @@
+<Page
+    x:Class="MedRecPlus.App.Views.DashboardPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer Padding="24,0,24,24">
+        <StackPanel Spacing="16">
+            <TextBlock x:Name="WelcomeText" FontSize="16" FontWeight="SemiBold" />
+
+            <Grid ColumnSpacing="12" RowSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource CardBorder}" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="Patients" Opacity="0.7" />
+                        <TextBlock x:Name="PatientsCount" FontSize="32" FontWeight="Bold" />
+                        <TextBlock x:Name="PatientsSub" Opacity="0.6" FontSize="12" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource CardBorder}" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="Visits today" Opacity="0.7" />
+                        <TextBlock x:Name="VisitsToday" FontSize="32" FontWeight="Bold" />
+                        <TextBlock x:Name="VisitsSub" Opacity="0.6" FontSize="12" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource CardBorder}" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="Revenue (paid, this month)" Opacity="0.7" />
+                        <TextBlock x:Name="RevenueMonth" FontSize="28" FontWeight="Bold" />
+                        <TextBlock x:Name="RevenueSub" Opacity="0.6" FontSize="12" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="3" Style="{StaticResource CardBorder}" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="Unpaid invoices" Opacity="0.7" />
+                        <TextBlock x:Name="UnpaidCount" FontSize="32" FontWeight="Bold" />
+                        <TextBlock x:Name="UnpaidSub" Opacity="0.6" FontSize="12" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="New visit" Click="NewVisit_Click" Style="{StaticResource AccentButtonStyle}" />
+                <Button Content="Add patient" Click="AddPatient_Click" />
+            </StackPanel>
+
+            <TextBlock Text="Recent invoices" FontSize="18" FontWeight="SemiBold" />
+            <ListView x:Name="RecentInvoices" IsItemClickEnabled="True" ItemClick="Invoice_Click"
+                      SelectionMode="None">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnSpacing="12" Padding="0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" /><ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="130" /><ColumnDefinition Width="90" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Number}" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="1" Text="{Binding Patient}" />
+                            <TextBlock Grid.Column="2" Text="{Binding Total}" HorizontalAlignment="Right" />
+                            <TextBlock Grid.Column="3" Text="{Binding Status}" Opacity="0.7" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
