@@ -1,9 +1,102 @@
 using Dapper;
 using MedRecPlus.Core.Services;
+using MedRecPlus.Core.Data;
+using MedRecPlus.Core.Models;
 using Microsoft.Data.Sqlite;
 
 internal static class RegressionChecks
 {
+    public static void RunSearch(string directory, Action<bool, string> check)
+    {
+        var database = new Database(Path.Combine(directory, "global-search.db"), new string('c', 64));
+        database.Initialize();
+        var patients = new PatientRepository(database);
+        var appointments = new AppointmentRepository(database);
+        var invoices = new InvoiceRepository(database);
+        var search = new GlobalSearchService(database);
+        var operatorId = new OperatorRepository(database).Create("Dr. Search", "Doctor");
+        var johnId = patients.Create(new Patient { Name = "John Smith", RecordNumber = "PT-JOHN-01", PhoneNumber = "08123456789" });
+        var otherJohnId = patients.Create(new Patient { Name = "John Stone", RecordNumber = "PT-STONE-02" });
+        patients.Create(new Patient { Name = @"O'Neil 100% a_b a\b", RecordNumber = "PT-LITERAL" });
+        var visitIds = new List<long>();
+        var invoiceIds = new List<long>();
+        for (var index = 0; index < 7; index++)
+        {
+            var patientId = index == 6 ? otherJohnId : johnId;
+            var name = index == 6 ? "John Stone" : "John Smith";
+            // Older records must be searchable regardless of list-page date filters.
+            var visitId = appointments.Create(new Appointment
+            {
+                PatientId = patientId, PatientName = name, OperatorId = operatorId,
+                OperatorName = "Dr. Search", Date = "2001-01-01T12:00:00Z", Description = "Follow-up",
+            });
+            visitIds.Add(visitId);
+            invoiceIds.Add(invoices.Create(new Invoice
+            {
+                InvoiceNumber = $"INV-SEARCH-{index:D4}", AppointmentId = visitId,
+                PatientId = patientId, PatientName = name, OperatorId = operatorId,
+                OperatorName = "Dr. Search", Date = "2001-01-02T12:00:00Z", AppointmentDate = "2001-01-01T12:00:00Z",
+            }));
+        }
+
+        var groups = search.Search("  jOhN  ");
+        check(groups.Select(group => group.Category).SequenceEqual(Enum.GetValues<SearchCategory>()),
+            "global search categorizes patients, appointments, and invoices");
+        check(groups[0].Total == 2 && groups[1].Total == 7 && groups[2].Total == 7,
+            "patient-name search finds related records across all dates");
+        check(groups[1].Entries.Count == 5 && groups[2].Entries.Count == 5,
+            "suggestions are limited independently in each category with full totals");
+        check(groups[0].Entries.Select(entry => entry.Id).ToHashSet().SetEquals(new[] { johnId, otherJohnId }),
+            "same-name patients retain distinct navigation identities");
+        check(groups[1].Entries.All(entry => entry.Category == SearchCategory.Appointments && appointments.GetById(entry.Id) != null)
+            && groups[2].Entries.All(entry => entry.Category == SearchCategory.Invoices && invoices.GetById(entry.Id) != null),
+            "search entries carry the category and actual detail-page record ID");
+        var rest = search.SearchCategoryPage("John", SearchCategory.Appointments, 5, 5);
+        check(rest.Entries.Count == 2 && !rest.Entries.Select(entry => entry.Id).Intersect(groups[1].Entries.Select(entry => entry.Id)).Any(),
+            "load more exposes remaining results without duplicate rows on equal dates");
+        check(!search.SearchCategoryPage("John", SearchCategory.Invoices, 5, 10).Entries.Any(),
+            "search page beyond the end is empty");
+        check(search.Search("Smith John")[0].Entries.Single().Id == johnId,
+            "multiword search matches every term regardless of word order");
+        check(search.Search("08123456789").Select(group => group.Total).SequenceEqual(new[] { 1, 6, 6 }),
+            "phone search finds the patient and related records");
+        check(search.Search("PT-STONE-02").Select(group => group.Total).SequenceEqual(new[] { 1, 1, 1 }),
+            "record-number search follows the correct patient relationship");
+        check(search.Search("INV-SEARCH-0002")[2].Entries.Single().Id == invoiceIds[2],
+            "invoice-number search opens the matching invoice identity");
+        check(search.Search("unpaid")[2].Total == 7 && search.Search("Follow-up")[1].Total == 7,
+            "search includes invoice status and appointment description");
+        foreach (var literal in new[] { "100%", "a_b", @"a\b", "O'Neil" })
+            check(search.Search(literal)[0].Entries.Single().Title.StartsWith("O'Neil"),
+                $"search safely treats '{literal}' as literal text");
+        check(search.Search("' OR 1=1 --").All(group => group.Total == 0), "search input cannot expand SQL filters");
+        check(search.Search("missing-person").All(group => group.Total == 0), "no-match search reports zero in each category");
+        check(search.Search(" \t ").Count == 0, "blank search does not enumerate patient records");
+
+        var john = patients.GetById(johnId)!;
+        john.Name = "Renamed Patient";
+        patients.Update(john);
+        check(search.Search("Renamed").Select(group => group.Total).SequenceEqual(new[] { 1, 6, 6 }),
+            "renamed patient's current name finds old appointments and invoices");
+        check(search.Search("Smith").Select(group => group.Total).SequenceEqual(new[] { 0, 6, 6 }),
+            "saved patient-name snapshots remain searchable");
+        appointments.SoftDelete(visitIds[0]);
+        invoices.SoftDelete(invoiceIds[0]);
+        check(search.Search("Smith").Select(group => group.Total).SequenceEqual(new[] { 0, 5, 5 }),
+            "deleted appointments and invoices are excluded");
+        patients.SoftDelete(otherJohnId);
+        check(search.Search("Stone").All(group => group.Total == 0),
+            "deleted patients and their related records are excluded");
+        using var cancelled = new CancellationTokenSource();
+        cancelled.Cancel();
+        try
+        {
+            search.Search("John", cancellationToken: cancelled.Token);
+            check(false, "cancelled search stops before reading results");
+        }
+        catch (OperationCanceledException) { check(true, "cancelled search stops before reading results"); }
+    }
+
     public static void RunIcd(string directory, Action<bool, string> check)
     {
         var path = Path.Combine(directory, "icd-fixture.db");

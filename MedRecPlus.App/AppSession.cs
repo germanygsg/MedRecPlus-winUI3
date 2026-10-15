@@ -27,6 +27,7 @@ public static class AppSession
     public static SettingsService Settings { get; private set; } = null!;
     public static NumberingService Numbering { get; private set; } = null!;
     public static AuditService Audit { get; private set; } = null!;
+    public static GlobalSearchService Search { get; private set; } = null!;
 
     public static bool IsReady { get; private set; }
 
@@ -50,6 +51,7 @@ public static class AppSession
         Settings = new SettingsService(db);
         Numbering = new NumberingService(db);
         Audit = new AuditService(db);
+        Search = new GlobalSearchService(db);
         IsReady = true;
     }
 

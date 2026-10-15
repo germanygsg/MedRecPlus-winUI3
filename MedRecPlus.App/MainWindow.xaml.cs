@@ -11,19 +11,7 @@ public sealed partial class MainWindow : Window
 {
     private bool _syncingSelection;
     private object? _currentParameter;
-
-    public sealed record SectionDestination(string Tag, string Title, string Keywords);
-
-    private readonly SectionDestination[] _destinations =
-    [
-        new("Dashboard", "Dashboard", "home overview clinic revenue recent"),
-        new("Patients", "Patients", "patient records people contacts"),
-        new("Appointments", "Appointments", "visits appointment calendar schedule"),
-        new("Invoices", "Invoices", "invoice billing receipt payments unpaid"),
-        new("Reports", "Reports", "report performance operator history"),
-        new("AiInsights", "AI Insights", "analytics insights questions revenue"),
-        new("Settings", "Settings", "clinic profile tax operators treatments examinations backup password"),
-    ];
+    private CancellationTokenSource? _searchCancellation;
 
     private readonly Dictionary<string, Type> _pages = new()
     {
@@ -120,7 +108,8 @@ public sealed partial class MainWindow : Window
         SectionTitle.Text = e.SourcePageType == typeof(PatientDetailPage) ? "Patient details"
             : e.SourcePageType == typeof(VisitDetailPage) ? "Visit details"
             : e.SourcePageType == typeof(InvoiceDetailPage) ? "Invoice details"
-            : _destinations.FirstOrDefault(section => section.Tag == tag)?.Title ?? "MedRecPlus";
+            : e.SourcePageType == typeof(SearchResultsPage) ? "Search results"
+            : SearchUi.Sections.FirstOrDefault(section => section.Tag == tag)?.Title ?? "MedRecPlus";
 
         _syncingSelection = true;
         try
@@ -131,30 +120,85 @@ public sealed partial class MainWindow : Window
         finally { _syncingSelection = false; }
     }
 
-    private IEnumerable<SectionDestination> FindSections(string query)
+    private async void ShellSearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
-        var words = query.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        return _destinations.Where(section => words.All(word =>
-            $"{section.Title} {section.Keywords}".Contains(word, StringComparison.OrdinalIgnoreCase)))
-            .OrderByDescending(section => section.Title.StartsWith(query.Trim(), StringComparison.OrdinalIgnoreCase));
-    }
-
-    private void ShellSearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
-    {
-        if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
-            sender.ItemsSource = FindSections(sender.Text).ToArray();
-    }
-
-    private void ShellSearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
-    {
-        var destination = args.ChosenSuggestion as SectionDestination;
-        if (destination == null && !string.IsNullOrWhiteSpace(args.QueryText))
-            destination = FindSections(args.QueryText).FirstOrDefault();
-        if (destination == null)
+        if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
+        {
+            if (args.Reason == AutoSuggestionBoxTextChangeReason.SuggestionChosen)
+                _searchCancellation?.Cancel();
             return;
+        }
+        _searchCancellation?.Cancel();
 
-        NavigateTo(_pages[destination.Tag]);
+        var query = sender.Text.Trim();
+        var sections = SearchUi.FindSections(query).ToArray();
+        if (query.Length == 0)
+        {
+            sender.ItemsSource = null;
+            sender.IsSuggestionListOpen = false;
+            return;
+        }
+
+        using var cancellation = new CancellationTokenSource();
+        _searchCancellation = cancellation;
+        var token = cancellation.Token;
+        sender.ItemsSource = new[] { new SearchItem("Searching…") };
+        try
+        {
+            // Wait for a pause in typing, then query a separate connection off the UI thread.
+            await Task.Delay(200, token);
+            var search = AppSession.Search;
+            var groups = await Task.Run(() => search.Search(query, cancellationToken: token), token);
+            if (token.IsCancellationRequested) return;
+
+            var items = new List<SearchItem>();
+            foreach (var group in groups.Where(group => group.Total > 0))
+            {
+                items.AddRange(group.Entries.Select((entry, index) => SearchUi.FromEntry(entry,
+                    index == 0 ? $"{group.Category} ({group.Total})" : "")));
+            }
+            if (sections.Length > 0)
+            {
+                sections[0] = sections[0] with { Heading = "Sections" };
+                items.AddRange(sections);
+            }
+            items.Add(new SearchItem(items.Count == 0 ? "No matches found" : "View all results",
+                items.Count == 0 ? "Try a name, record number, phone, or invoice number" : $"All matches for “{query}”",
+                Query: query));
+            sender.ItemsSource = items;
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception)
+        {
+            if (!token.IsCancellationRequested)
+                sender.ItemsSource = sections.Append(new SearchItem("Search unavailable",
+                    "Press Enter to open search results and retry", Query: query)).ToArray();
+        }
+        finally
+        {
+            if (ReferenceEquals(_searchCancellation, cancellation)) _searchCancellation = null;
+        }
+    }
+
+    private void ShellSearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args) =>
+        SubmitSearch(sender, args.QueryText, args.ChosenSuggestion as SearchItem);
+
+    private void SubmitSearch(AutoSuggestBox sender, string queryText, SearchItem? destination = null)
+    {
+        _searchCancellation?.Cancel();
+        if (destination == null)
+        {
+            var query = queryText.Trim();
+            if (query.Length == 0) return;
+            destination = SearchUi.FindSections(query).FirstOrDefault(section =>
+                section.Title.Equals(query, StringComparison.OrdinalIgnoreCase))
+                ?? new SearchItem("View all results", Query: query);
+        }
+        if (destination.Category == null && destination.SectionTag == null && destination.Query == null) return;
+
+        SearchUi.Open(destination);
         sender.Text = "";
+        sender.ItemsSource = null;
         sender.IsSuggestionListOpen = false;
     }
 

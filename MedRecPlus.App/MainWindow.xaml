@@ -30,13 +30,23 @@
                                 Visibility="Collapsed"
                                 MinWidth="120" MaxWidth="516"
                                 HorizontalAlignment="Stretch"
-                                PlaceholderText="Search MedRecPlus"
-                                AutomationProperties.Name="Search MedRecPlus sections"
-                                DisplayMemberPath="Title"
+                                PlaceholderText="Search records and sections"
+                                AutomationProperties.Name="Search patients, appointments, invoices, and sections"
                                 TextMemberPath="Title"
                                 QueryIcon="Find"
                                 TextChanged="ShellSearchBox_TextChanged"
                                 QuerySubmitted="ShellSearchBox_QuerySubmitted">
+                    <AutoSuggestBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Spacing="4" Padding="0,4" HorizontalAlignment="Stretch">
+                                <TextBlock Text="{Binding Heading}" Visibility="{Binding HeadingVisibility}"
+                                           FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                           Margin="0,4,0,4" AutomationProperties.HeadingLevel="Level2" />
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Detail}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </AutoSuggestBox.ItemTemplate>
                     <AutoSuggestBox.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="SearchAccelerator_Invoked" />
                     </AutoSuggestBox.KeyboardAccelerators>
@@ -101,7 +111,8 @@
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
 
-            <Frame x:Name="ContentFrame" Navigated="ContentFrame_Navigated">
+            <Frame x:Name="ContentFrame" Navigated="ContentFrame_Navigated"
+                   KeyboardAcceleratorPlacementMode="Hidden">
                 <Frame.KeyboardAccelerators>
                     <KeyboardAccelerator Key="Left" Modifiers="Menu" Invoked="BackAccelerator_Invoked" />
                 </Frame.KeyboardAccelerators>

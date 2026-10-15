@@ -1,10 +1,11 @@
 using System.Collections.ObjectModel;
-using System.Text.Json;
 using MedRecPlus.Core.Models;
 using MedRecPlus.Core.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml.Media;
+using Windows.Graphics.Printing;
 
 namespace MedRecPlus.App.Views;
 
@@ -12,20 +13,32 @@ public sealed partial class InvoiceDetailPage : Page
 {
     private long _invoiceId;
     private Invoice _invoice = null!;
-    public ObservableCollection<LineRow> Lines { get; } = new();
+    private InvoiceReceipt? _receipt;
+    private InvoicePrinter? _printer;
+    private bool _printing;
+    private PrintPageDescription _paperDescription = InvoicePaperLayout.DefaultPageDescription;
     public ObservableCollection<PaymentRow> Payments { get; } = new();
 
     public InvoiceDetailPage()
     {
         InitializeComponent();
-        LineItems.ItemsSource = Lines;
         PaymentList.ItemsSource = Payments;
+        Loaded += (_, _) => RenderReceiptPreview(_paperDescription);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
+        base.OnNavigatedTo(e);
         _invoiceId = (long)e.Parameter;
         Refresh();
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        _printer?.Dispose();
+        _printer = null;
+        _printing = false;
+        base.OnNavigatedFrom(e);
     }
 
     private void Refresh()
@@ -33,25 +46,21 @@ public sealed partial class InvoiceDetailPage : Page
         _invoice = AppSession.Invoices.GetInvoice(_invoiceId);
         var clinic = AppSession.Settings.GetOrDefault(SettingKeys.ClinicProfile, new ClinicProfile());
 
-        ClinicHeader.Text = string.IsNullOrWhiteSpace(clinic.HeaderText) ? clinic.Name : clinic.HeaderText;
-        BillTo.Text = $"{_invoice.PatientName}\nRecord: {AppSession.Patients.GetById(_invoice.PatientId)?.RecordNumber}";
-        InvoiceInfo.Text = $"#{_invoice.InvoiceNumber}\n{UiHelpers.Date(_invoice.Date)}\nStatus: {_invoice.Status.ToUpper()}";
-
-        Lines.Clear();
-        var items = JsonSerializer.Deserialize<List<TreatmentItem>>(_invoice.TreatmentsJson) ?? new();
-        foreach (var t in items)
-            Lines.Add(new LineRow { Name = t.Name, Price = UiHelpers.Money(t.PriceCents) });
-
-        SubtotalText.Text = $"Subtotal: {UiHelpers.Money(_invoice.SubtotalCents)}";
-        DiscountText.Text = _invoice.DiscountCents > 0 ? $"Discount: −{UiHelpers.Money(_invoice.DiscountCents)}" : "";
-        DiscountText.Visibility = _invoice.DiscountCents > 0 ? Visibility.Visible : Visibility.Collapsed;
-        TaxText.Text = (_invoice.TaxCents ?? 0) > 0 ? $"{_invoice.TaxLabel}: {UiHelpers.Money(_invoice.TaxCents!.Value)}" : "";
-        TaxText.Visibility = (_invoice.TaxCents ?? 0) > 0 ? Visibility.Visible : Visibility.Collapsed;
-        TotalText.Text = $"TOTAL: {UiHelpers.Money(_invoice.TotalCents)}";
-        PaidText.Text = $"Paid: {UiHelpers.Money(_invoice.PaidCents)} · Outstanding: {UiHelpers.Money(_invoice.TotalCents - _invoice.PaidCents)}";
-
-        OperatorInfo.Text = $"Operator: {_invoice.OperatorName} · Visit: {UiHelpers.Date(_invoice.AppointmentDate)}";
-        ClinicFooter.Text = clinic.FooterText;
+        ReceiptPanel.Children.Clear();
+        _receipt = null;
+        PrintButton.IsEnabled = false;
+        try
+        {
+            _receipt = InvoiceReceipt.Create(_invoice,
+                AppSession.Patients.GetById(_invoice.PatientId)?.RecordNumber, clinic);
+            RenderReceiptPreview(_paperDescription);
+            PrintButton.IsEnabled = !_printing;
+        }
+        catch (Exception)
+        {
+            ReceiptPanel.Children.Add(InvoiceReceipt.Text(
+                "The saved invoice receipt could not be loaded. Printing is unavailable."));
+        }
 
         Payments.Clear();
         foreach (var p in AppSession.Invoices.GetPayments(_invoiceId))
@@ -60,6 +69,33 @@ public sealed partial class InvoiceDetailPage : Page
                 Date = UiHelpers.Date(p.PaidAt), Method = p.Method,
                 Amount = UiHelpers.Money(p.AmountCents),
             });
+    }
+
+    internal void RenderReceiptPreview(PrintPageDescription description)
+    {
+        if (_receipt == null) return;
+        _paperDescription = description;
+        var pages = InvoicePaperLayout.BuildPages(_receipt, ReceiptPanel, description);
+        ReceiptPanel.Children.Clear();
+        foreach (var page in pages)
+        {
+            // Scale the whole sheet down in a narrow window; never reflow the
+            // receipt according to the window width or change its page breaks.
+            ReceiptPanel.Children.Add(new Viewbox
+            {
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Stretch = Stretch.Uniform,
+                StretchDirection = StretchDirection.DownOnly,
+                MaxWidth = InvoicePaperLayout.PaperSize.Width + 2,
+                Child = new Border
+                {
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.LightGray),
+                    Child = page,
+                },
+            });
+        }
+        ReceiptPanel.UpdateLayout();
     }
 
     private void Back_Click(object sender, RoutedEventArgs e) =>
@@ -77,18 +113,45 @@ public sealed partial class InvoiceDetailPage : Page
         if (dlg.Tag as string == "saved") Refresh();
     }
 
-    private async void Void_Click(object sender, RoutedEventArgs e)
+    private async void Print_Click(object sender, RoutedEventArgs e)
     {
-        if (_invoice.Status == InvoiceStatuses.Void) return;
-        if (await Dialogs.Confirm(XamlRoot, "Void invoice?",
-            $"Void invoice {_invoice.InvoiceNumber}? This is audited and cannot be undone.", "Void"))
+        if (_printing || _receipt == null) return;
+        _printing = true;
+        PrintButton.IsEnabled = false;
+        try
+        {
+            if (!PrintManager.IsSupported())
+            {
+                Dialogs.Alert(XamlRoot, "Printing unavailable", "Printing is not supported on this device.");
+                PrintCompleted(PrintTaskCompletion.Canceled);
+                return;
+            }
+            _printer ??= new InvoicePrinter(App.Shell!, PrintCanvas, PrintCompleted, RenderReceiptPreview);
+            if (!await _printer.ShowAsync(_receipt)) PrintCompleted(PrintTaskCompletion.Canceled);
+        }
+        catch (Exception)
+        {
+            PrintCompleted(PrintTaskCompletion.Failed);
+        }
+    }
+
+    private void PrintCompleted(PrintTaskCompletion completion)
+    {
+        _printing = false;
+        PrintButton.IsEnabled = _receipt != null;
+        if (completion == PrintTaskCompletion.Failed)
+            Dialogs.Alert(XamlRoot, "Printing failed", "The invoice could not be printed. Check your printer and try again.");
+        else if (completion == PrintTaskCompletion.Submitted)
         {
             try
             {
-                AppSession.Invoices.SetStatus(_invoiceId, InvoiceStatuses.Void, AppSession.Actor);
-                Refresh();
+                AppSession.Audit.Append(AuditEvents.InvoicePrinted, "invoice", _invoiceId.ToString(), AppSession.Actor);
             }
-            catch (Exception ex) { Dialogs.Alert(XamlRoot, "Void failed", ex.Message); }
+            catch (Exception)
+            {
+                Dialogs.Alert(XamlRoot, "Print audit unavailable",
+                    "The print job was submitted, but its audit entry could not be saved.");
+            }
         }
     }
 
@@ -99,12 +162,6 @@ public sealed partial class InvoiceDetailPage : Page
             AppSession.Invoices.DeleteInvoice(_invoiceId, AppSession.Actor);
             App.Shell?.NavigateTo(typeof(InvoicesPage));
         }
-    }
-
-    public sealed class LineRow
-    {
-        public string Name { get; set; } = "";
-        public string Price { get; set; } = "";
     }
 
     public sealed class PaymentRow

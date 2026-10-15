@@ -30,6 +30,7 @@ if (args.Contains("--regressions-only"))
     {
         RegressionChecks.RunIcd(dir, Check);
         RegressionChecks.RunRupiah(dir, Check);
+        RegressionChecks.RunSearch(dir, Check);
         Console.WriteLine(failures.Count == 0 ? "REGRESSION_RESULT=PASS" : $"REGRESSION_RESULT=FAIL({failures.Count})");
         return failures.Count == 0 ? 0 : 1;
     }
@@ -60,6 +61,7 @@ try
     Check(db.TryUnlock(), "unlock with correct key");
     RegressionChecks.RunIcd(dir, Check);
     RegressionChecks.RunRupiah(dir, Check);
+    RegressionChecks.RunSearch(dir, Check);
 
     // Raw bytes must not contain the plaintext patient name we'll insert later (encryption check).
     // --- Repositories ---
