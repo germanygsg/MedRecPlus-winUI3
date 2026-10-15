@@ -1,0 +1,36 @@
+{
+  "os": "Windows 10 Pro | 10.0.26300.9457",
+  "cpu": "Intel(R) Core(TM) i3-10105F CPU @ 3.70GHz",
+  "ram_gb": 23.9,
+  "disks": [
+    "C: 40.9GB free of 237.5GB",
+    "D: 21.8GB free of 931.5GB",
+    "E: 39.1GB free of 465.8GB",
+    "F: 9.8GB free of 931.5GB"
+  ],
+  "vswhere_found": true,
+  "visual_studio": [
+    "Visual Studio Build Tools 2026 18.9.12112.369"
+  ],
+  "workload_net_desktop_dev": false,
+  "workload_win_app_dev": false,
+  "winui_template_files": [],
+  "dotnet_path": "C:\\Program Files\\dotnet\\dotnet.exe",
+  "dotnet_sdks": [
+    "10.0.401 [C:\\Program Files\\dotnet\\sdk]"
+  ],
+  "windows_sdks": [
+    "10.0.14393.0",
+    "10.0.15063.0",
+    "10.0.16299.0",
+    "10.0.17134.0",
+    "10.0.26100.0",
+    "arm64",
+    "x64",
+    "x86"
+  ],
+  "developer_mode": true,
+  "git": null,
+  "ok": true,
+  "exit_code": 0
+}
