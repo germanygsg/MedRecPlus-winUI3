@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MedRecPlus.App">
 
-    <ScrollViewer Padding="24,0,24,24">
+    <ScrollViewer Padding="24,24,24,24">
         <StackPanel Spacing="16">
 
             <Border Style="{StaticResource CardBorder}" Padding="16">

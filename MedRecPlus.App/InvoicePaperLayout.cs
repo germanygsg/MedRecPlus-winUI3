@@ -26,13 +26,13 @@ internal static class InvoicePaperLayout
         host.Children.Clear();
         var paper = PaperSize;
         var area = description.ImageableRect;
-        var margin = Math.Min(24, paper.Width * 0.03);
+        var layout = receipt.Layout.Normalize();
         // Round inward: XAML's pixel rounding must never expand content beyond
         // a driver's fractional printable bounds.
-        var left = Math.Ceiling(Math.Max(margin, area.Left));
-        var top = Math.Ceiling(Math.Max(margin, area.Top));
-        var right = Math.Ceiling(Math.Max(margin, description.PageSize.Width - area.Right));
-        var bottom = Math.Ceiling(Math.Max(margin, description.PageSize.Height - area.Bottom));
+        var left = Math.Ceiling(Math.Max(layout.MarginLeftMm * 96 / 25.4, area.Left));
+        var top = Math.Ceiling(Math.Max(layout.MarginTopMm * 96 / 25.4, area.Top));
+        var right = Math.Ceiling(Math.Max(layout.MarginRightMm * 96 / 25.4, description.PageSize.Width - area.Right));
+        var bottom = Math.Ceiling(Math.Max(layout.MarginBottomMm * 96 / 25.4, description.PageSize.Height - area.Bottom));
         var width = Math.Floor(paper.Width - left - right);
         var height = Math.Floor(paper.Height - top - bottom - 28); // page identification
         if (width <= 32 || height <= 32)
@@ -70,10 +70,14 @@ internal static class InvoicePaperLayout
             used += blockHeight;
         }
 
+        // Even a deliberately empty receipt needs a valid page for the print API.
+        if (pages.Count == 0) NewPage(host, pages, paper, left, top, width, height);
         for (var index = 0; index < pages.Count; index++)
         {
             var page = (Grid)pages[index];
-            var footer = InvoiceReceipt.Text($"#{receipt.Number} · Page {index + 1} of {pages.Count}", 11);
+            var footer = receipt.UseLegacyAppearance
+                ? InvoiceReceipt.Text($"#{receipt.Number} · Page {index + 1} of {pages.Count}", 11)
+                : receipt.StyledText($"#{receipt.Number} · Page {index + 1} of {pages.Count}", 11);
             footer.Width = width;
             footer.Margin = new Thickness(left, top + height + 8, 0, 0);
             footer.HorizontalAlignment = HorizontalAlignment.Left;
@@ -84,6 +88,27 @@ internal static class InvoicePaperLayout
         }
         host.UpdateLayout();
         return pages;
+    }
+
+    internal static void ShowPreview(InvoiceReceipt receipt, StackPanel host, PrintPageDescription description)
+    {
+        var pages = BuildPages(receipt, host, description);
+        host.Children.Clear();
+        foreach (var page in pages)
+            host.Children.Add(new Viewbox
+            {
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Stretch = Stretch.Uniform,
+                StretchDirection = StretchDirection.DownOnly,
+                MaxWidth = PaperSize.Width + 2,
+                Child = new Border
+                {
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.LightGray),
+                    Child = page,
+                },
+            });
+        host.UpdateLayout();
     }
 
     private static StackPanel NewPage(Panel host, List<FrameworkElement> pages, Size paper, double left, double top, double width, double height)

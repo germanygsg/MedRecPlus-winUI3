@@ -4,30 +4,154 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MedRecPlus.App">
 
-    <Grid Padding="24,0,24,24" RowSpacing="12">
+    <Page.Resources>
+        <!-- Column widths for the data grid live adjacent to the templates below. -->
+    </Page.Resources>
+
+    <Grid Padding="24,24,24,24" RowSpacing="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" /><RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
 
-        <local:WrapPanel Grid.Row="0" Spacing="8">
+        <local:WrapPanel Grid.Row="0" Spacing="8" HorizontalAlignment="Right">
+            <Button x:Name="ColumnsButton" ToolTipService.ToolTip="Choose columns" AutomationProperties.Name="Choose columns">
+                <FontIcon Glyph="&#xE8F1;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="16"
+                          AutomationProperties.AccessibilityView="Raw" />
+            </Button>
+            <Button x:Name="BulkDeleteButton" Content="Bulk delete" Click="BulkDelete_Click" Visibility="Collapsed"
+                    ContentTemplate="{StaticResource DeleteButtonContentTemplate}" />
             <Button Content="Add patient" Click="Add_Click" Style="{StaticResource AccentButtonStyle}" />
         </local:WrapPanel>
 
-        <ListView Grid.Row="1" x:Name="PatientList" IsItemClickEnabled="True" ItemClick="Patient_Click" SelectionMode="None">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <local:AdaptiveGrid ColumnSpacing="12" Padding="0,10" MinHeight="52" Columns="6" MinimumColumnWidth="140">
+        <!-- Data grid: header and footer share the card, the list scrolls between them. -->
+        <Border Grid.Row="1" Style="{StaticResource CardBorder}" Padding="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" /><RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                        <TextBlock Text="{Binding RecordNumber}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding Age}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding Phone}" Opacity="0.7" VerticalAlignment="Center" TextWrapping="Wrap" />
-                        <Button Content="Edit" ContentTemplate="{StaticResource EditButtonContentTemplate}" Click="Edit_Click" Tag="{Binding Id}" VerticalAlignment="Center" />
-                        <Button Content="Delete" ContentTemplate="{StaticResource DeleteButtonContentTemplate}" Click="Delete_Click" Tag="{Binding Id}" VerticalAlignment="Center" />
-                    </local:AdaptiveGrid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+                <ScrollViewer x:Name="TableScroll" Grid.Row="0" HorizontalScrollBarVisibility="Auto"
+                              HorizontalScrollMode="Enabled" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled">
+                    <Grid x:Name="TableContent">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /><RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Keep these column widths identical to the row template so columns stay aligned. -->
+                        <Border Grid.Row="0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                            <Grid x:Name="TableHeader" Padding="12,10,12,9">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="40" />
+                                    <ColumnDefinition Width="128" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="48" />
+                                    <ColumnDefinition Width="1.8*" />
+                                    <ColumnDefinition Width="1.1*" />
+                                    <ColumnDefinition Width="1.5*" />
+                                    <ColumnDefinition Width="0.9*" />
+                                    <ColumnDefinition Width="110" />
+                                </Grid.ColumnDefinitions>
+                                <CheckBox Grid.Column="0" x:Name="SelectAllBox" MinWidth="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Checked="SelectAll_Checked" Unchecked="SelectAll_Unchecked" />
+                                <TextBlock Grid.Column="1" Text="Record Number" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="Patient Name" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="3" Text="Age" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="4" Text="Address" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="5" Text="Phone Number" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="6" Text="Initial Diagnosis" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="7" Text="Date Added" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="8" Text="Actions" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+
+                        <ListView Grid.Row="1" x:Name="PatientList" IsItemClickEnabled="True" ItemClick="Patient_Click" SelectionMode="None"
+                                  ItemContainerStyle="{StaticResource TableItemStyle}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                                        <!-- Same column widths as the header. -->
+                                        <Grid x:Name="TableRow" Background="Transparent" Padding="12,9,12,9" Loaded="TableRow_Loaded">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="128" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="48" />
+                                                <ColumnDefinition Width="1.8*" />
+                                                <ColumnDefinition Width="1.1*" />
+                                                <ColumnDefinition Width="1.5*" />
+                                                <ColumnDefinition Width="0.9*" />
+                                                <ColumnDefinition Width="110" />
+                                            </Grid.ColumnDefinitions>
+                                            <CheckBox Grid.Column="0" MinWidth="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                      IsChecked="{Binding IsSelected, Mode=TwoWay}" Click="RowChecked_Click" />
+                                            <Border Grid.Column="1" Background="{StaticResource RecordPillBrush}"
+                                                    CornerRadius="11" Padding="9,3" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding RecordNumber}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                                           FontSize="12" FontWeight="SemiBold" TextWrapping="NoWrap" />
+                                            </Border>
+                                            <TextBlock Grid.Column="2" Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="3" Text="{Binding Age}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="4" Text="{Binding Address}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="5" Text="{Binding Phone}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="6" Text="{Binding InitialDiagnosis}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="7" Text="{Binding DateAdded}" VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="8" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                <Button Style="{StaticResource RowViewButton}" Tag="{Binding Id}" Click="ViewRow_Click"
+                                                        AutomationProperties.Name="View patient">
+                                                    <FontIcon Glyph="&#xE7B3;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14"
+                                                              AutomationProperties.AccessibilityView="Raw" />
+                                                </Button>
+                                                <Button Style="{StaticResource RowEditButton}" Tag="{Binding Id}" Click="Edit_Click"
+                                                        AutomationProperties.Name="Edit patient">
+                                                    <FontIcon Glyph="&#xE70F;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14"
+                                                              AutomationProperties.AccessibilityView="Raw" />
+                                                </Button>
+                                                <Button Style="{StaticResource RowDeleteButton}" Tag="{Binding Id}" Click="Delete_Click"
+                                                        AutomationProperties.Name="Delete patient">
+                                                    <FontIcon Glyph="&#xE74D;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14"
+                                                              AutomationProperties.AccessibilityView="Raw" />
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                    </Grid>
+                </ScrollViewer>
+
+                <Border Grid.Row="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+                    <Grid Padding="12,8,12,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Entries per page" VerticalAlignment="Center" Opacity="0.7" />
+                        <ComboBox Grid.Column="1" x:Name="PageSizeBox" Margin="8,0,0,0" MinWidth="84" SelectedIndex="0"
+                                  SelectionChanged="PageSize_Changed">
+                            <ComboBoxItem Content="10" /><ComboBoxItem Content="25" /><ComboBoxItem Content="50" />
+                        </ComboBox>
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <Button x:Name="PrevPageButton" Style="{StaticResource PageNavButton}" Click="PrevPage_Click"
+                                    AutomationProperties.Name="Previous page">
+                                <FontIcon Glyph="&#xE76B;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14"
+                                          AutomationProperties.AccessibilityView="Raw" />
+                            </Button>
+                            <Button x:Name="NextPageButton" Style="{StaticResource PageNavButton}" Click="NextPage_Click"
+                                    AutomationProperties.Name="Next page">
+                                <FontIcon Glyph="&#xE76C;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14"
+                                          AutomationProperties.AccessibilityView="Raw" />
+                            </Button>
+                        </StackPanel>
+                        <TextBlock Grid.Column="4" x:Name="ShowingText" VerticalAlignment="Center" Opacity="0.7" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
     </Grid>
 </Page>

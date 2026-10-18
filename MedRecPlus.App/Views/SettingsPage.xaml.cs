@@ -19,6 +19,10 @@ public sealed partial class SettingsPage : Page
     public SettingsPage()
     {
         InitializeComponent();
+        ReceiptDesigner.Changed += (_, _) => ReceiptSaveStatus.Text = "Unsaved receipt changes";
+        ClinicNameBox.TextChanged += (_, _) => ReceiptTextChanged();
+        HeaderBox.TextChanged += (_, _) => ReceiptTextChanged();
+        FooterBox.TextChanged += (_, _) => ReceiptTextChanged();
         _clinicValidation.Add(ClinicNameBox, ClinicNameBoxError, () => FormValidation.Required(ClinicNameBox.Text, "Clinic name"));
         _taxValidation.Add(TaxValueBox, TaxValueBoxError, () => TaxTypeBox.SelectedIndex > 0 &&
             (!double.IsFinite(FormValidation.Number(TaxValueBox)) || FormValidation.Number(TaxValueBox) < 0)
@@ -58,6 +62,9 @@ public sealed partial class SettingsPage : Page
         ClinicNameBox.Text = clinic.Name;
         HeaderBox.Text = clinic.HeaderText;
         FooterBox.Text = clinic.FooterText;
+        ReceiptDesigner.SetLayout(ReceiptLayout.Load(AppSession.Settings));
+        ReceiptDesigner.SetClinic(clinic);
+        ReceiptSaveStatus.Text = "";
 
         var cur = AppSession.Settings.GetOrDefault(SettingKeys.Currency, new CurrencyConfig());
         TaxLabelBox.Text = cur.TaxLabel;
@@ -86,13 +93,37 @@ public sealed partial class SettingsPage : Page
 
     private void SaveClinic_Click(object sender, RoutedEventArgs e)
     {
-        if (!_clinicValidation.Validate()) return;
+        var validClinic = _clinicValidation.Validate();
+        var validLayout = ReceiptDesigner.Validate();
+        if (!validClinic || !validLayout) return;
         var clinic = AppSession.Settings.GetOrDefault(SettingKeys.ClinicProfile, new ClinicProfile());
         clinic.Name = ClinicNameBox.Text.Trim();
         clinic.HeaderText = HeaderBox.Text;
         clinic.FooterText = FooterBox.Text;
-        AppSession.Settings.Set(SettingKeys.ClinicProfile, clinic);
-        Dialogs.Alert(XamlRoot, "Saved", "Clinic profile saved.");
+        try
+        {
+            AppSession.Settings.SaveReceiptSetup(clinic, ReceiptDesigner.GetLayout());
+            ReceiptSaveStatus.Text = "Receipt setup saved. New invoices will use these settings.";
+        }
+        catch (Exception)
+        {
+            ReceiptSaveStatus.Text = "Receipt setup could not be saved. Please try again.";
+        }
+    }
+
+    private void ReceiptTextChanged()
+    {
+        ReceiptDesigner.SetClinic(new ClinicProfile
+        {
+            Name = ClinicNameBox.Text, HeaderText = HeaderBox.Text, FooterText = FooterBox.Text,
+        });
+        ReceiptSaveStatus.Text = "Unsaved receipt changes";
+    }
+
+    private void ResetReceipt_Click(object sender, RoutedEventArgs e)
+    {
+        ReceiptDesigner.SetLayout(new ReceiptLayout());
+        ReceiptSaveStatus.Text = "Default layout restored. Save receipt setup to keep it.";
     }
 
     private void SaveTax_Click(object sender, RoutedEventArgs e)

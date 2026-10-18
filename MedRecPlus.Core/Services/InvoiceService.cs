@@ -47,6 +47,7 @@ public sealed class InvoiceService
 
         var currency = _settings.GetOrDefault(SettingKeys.Currency, new CurrencyConfig());
         var clinic = _settings.GetOrDefault(SettingKeys.ClinicProfile, new ClinicProfile());
+        var receiptLayout = ReceiptLayout.Load(_settings);
 
         // Discount snapshot from the visit: percent stored as whole number, fixed as cents.
         var discountValue = visit.DiscountType == DiscountTypes.Percent
@@ -69,7 +70,8 @@ public sealed class InvoiceService
                 issued_at = DbTime.Now(),
                 currency = currency,
                 clinic,
-                settings_version = 1,
+                receipt_layout = receiptLayout,
+                settings_version = 2,
             });
             var inv = new Invoice
             {

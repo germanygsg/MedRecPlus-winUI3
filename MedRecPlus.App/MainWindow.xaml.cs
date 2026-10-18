@@ -137,11 +137,15 @@ public sealed partial class MainWindow : Window
             : e.SourcePageType == typeof(InvoiceDetailPage) ? "Invoices"
             : _pages.FirstOrDefault(entry => entry.Value == e.SourcePageType).Key;
 
+        // Sidebar pages have no in-page title (the sidebar labels them); a nulled header
+        // removes the whole header band. Drill-down pages show their contextual title.
+        var isSidebarPage = _pages.ContainsValue(e.SourcePageType);
         SectionTitle.Text = e.SourcePageType == typeof(PatientDetailPage) ? "Patient details"
             : e.SourcePageType == typeof(VisitDetailPage) ? "Visit details"
             : e.SourcePageType == typeof(InvoiceDetailPage) ? "Invoice details"
             : e.SourcePageType == typeof(SearchResultsPage) ? "Search results"
             : SearchUi.Sections.FirstOrDefault(section => section.Tag == tag)?.Title ?? "MedRecPlus";
+        NavView.Header = isSidebarPage ? null : SectionTitle;
 
         _syncingSelection = true;
         try

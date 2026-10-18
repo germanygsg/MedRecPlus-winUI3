@@ -4,143 +4,291 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MedRecPlus.App">
 
-    <ScrollViewer Padding="24,0,24,24">
-        <StackPanel Spacing="16">
+    <Page.Resources>
+        <Style x:Key="SettingsSectionLabel" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="AutomationProperties.HeadingLevel" Value="Level2" />
+        </Style>
+        <Style x:Key="SettingsExpander" TargetType="Expander">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="CornerRadius" Value="10" />
+        </Style>
+        <Style x:Key="SettingsIconBadge" TargetType="Border">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="SettingsDescription" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </Page.Resources>
 
-            <Border Style="{StaticResource CardBorder}" Padding="16">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Clinic profile" FontWeight="SemiBold" FontSize="16" TextWrapping="Wrap" />
-                    <StackPanel Spacing="4">
-                        <TextBox x:Name="ClinicNameBox" Header="Clinic name *" />
-                        <TextBlock x:Name="ClinicNameBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
-                    </StackPanel>
-                    <TextBox x:Name="HeaderBox" Header="Receipt header" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
-                    <TextBox x:Name="FooterBox" Header="Receipt footer" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
-                    <Button Content="Save clinic profile" Click="SaveClinic_Click" />
+    <ScrollViewer Padding="24" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="24">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource SettingsIconBadge}" Background="{StaticResource RowActionTintBrush}" Width="44" Height="44">
+                    <FontIcon Glyph="&#xE713;" FontSize="22" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" AutomationProperties.AccessibilityView="Raw" />
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" AutomationProperties.HeadingLevel="Level1" />
+                    <TextBlock Text="Manage your clinic preferences and data" Style="{StaticResource SettingsDescription}" />
                 </StackPanel>
-            </Border>
+            </Grid>
+            <StackPanel Spacing="8">
+                <TextBlock Text="CLINIC" Style="{StaticResource SettingsSectionLabel}" />
+                <Expander x:Name="OperatorsExpander" Style="{StaticResource SettingsExpander}" AutomationProperties.Name="Operator management">
+                    <Expander.Header>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource SettingsIconBadge}" Background="#200EA5E9">
+                                <FontIcon Glyph="&#xE716;" FontSize="18" Foreground="#0EA5E9" AutomationProperties.AccessibilityView="Raw" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                <TextBlock Text="Operator management" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Manage clinic operators and their roles" Style="{StaticResource SettingsDescription}" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander.Header>
+                    <StackPanel Spacing="10" Padding="16">
+                        <Button Content="Add operator" Click="AddOperator_Click" />
+                        <ListView x:Name="OperatorList" SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
 
-            <Border Style="{StaticResource CardBorder}" Padding="16">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Tax" FontWeight="SemiBold" FontSize="16" TextWrapping="Wrap" />
-                    <local:AdaptiveGrid ColumnSpacing="8" Columns="3" MinimumColumnWidth="140">
+                                        <TextBlock Text="{Binding Display}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                        <Button Content="Delete" ContentTemplate="{StaticResource DeleteButtonContentTemplate}" Click="DeleteOperator_Click" Tag="{Binding Id}" />
+                                    </local:AdaptiveGrid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Expander>
+                <Expander x:Name="TreatmentsExpander" Style="{StaticResource SettingsExpander}" AutomationProperties.Name="Treatment management">
+                    <Expander.Header>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource SettingsIconBadge}" Background="#2014B8A6">
+                                <FontIcon Glyph="&#xE95E;" FontSize="18" Foreground="#14B8A6" AutomationProperties.AccessibilityView="Raw" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                <TextBlock Text="Treatment management" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Manage available treatments and their pricing" Style="{StaticResource SettingsDescription}" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander.Header>
+                    <StackPanel Spacing="10" Padding="16">
+                        <Button Content="Add treatment" Click="AddTreatment_Click" />
+                        <ListView x:Name="TreatmentList" SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <local:AdaptiveGrid ColumnSpacing="8" Columns="3" MinimumColumnWidth="140">
 
-                        <TextBox x:Name="TaxLabelBox" Header="Tax label" />
-                        <ComboBox x:Name="TaxTypeBox" Header="Tax type" HorizontalAlignment="Stretch">
-                            <ComboBoxItem Content="None" Tag="none" />
-                            <ComboBoxItem Content="Percent %" Tag="percent" />
-                            <ComboBoxItem Content="Fixed (Rp)" Tag="fixed" />
-                        </ComboBox>
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Price}" VerticalAlignment="Center" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                        <Button Content="Delete" ContentTemplate="{StaticResource DeleteButtonContentTemplate}" Click="DeleteTreatment_Click" Tag="{Binding Id}" />
+                                    </local:AdaptiveGrid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Expander>
+                <Expander x:Name="ExaminationsExpander" Style="{StaticResource SettingsExpander}" AutomationProperties.Name="Custom patient examinations">
+                    <Expander.Header>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource SettingsIconBadge}" Background="#20A855F7">
+                                <FontIcon Glyph="&#xE9F9;" FontSize="18" Foreground="#A855F7" AutomationProperties.AccessibilityView="Raw" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                <TextBlock Text="Custom patient examinations" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Manage custom examination fields for patient appointments" Style="{StaticResource SettingsDescription}" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander.Header>
+                    <StackPanel Spacing="10" Padding="16">
+                        <Button Content="Add examination" Click="AddExam_Click" />
+                        <ListView x:Name="ExamList" SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
+
+                                        <TextBlock Text="{Binding Display}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                        <Button Content="Delete" ContentTemplate="{StaticResource DeleteButtonContentTemplate}" Click="DeleteExam_Click" Tag="{Binding Id}" />
+                                    </local:AdaptiveGrid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+            <StackPanel Spacing="8">
+                <TextBlock Text="BILLING" Style="{StaticResource SettingsSectionLabel}" />
+                <Expander x:Name="TaxExpander" Style="{StaticResource SettingsExpander}" AutomationProperties.Name="Tax settings">
+                    <Expander.Header>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource SettingsIconBadge}" Background="#20F59E0B">
+                                <FontIcon Glyph="&#xE8D4;" FontSize="18" Foreground="#F59E0B" AutomationProperties.AccessibilityView="Raw" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                <TextBlock Text="Tax settings" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Set the tax added to invoice totals in rupiah" Style="{StaticResource SettingsDescription}" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander.Header>
+                    <StackPanel Spacing="10" Padding="16">
+                        <local:AdaptiveGrid ColumnSpacing="8" Columns="3" MinimumColumnWidth="140">
+
+                            <TextBox x:Name="TaxLabelBox" Header="Tax label" />
+                            <ComboBox x:Name="TaxTypeBox" Header="Tax type" HorizontalAlignment="Stretch">
+                                <ComboBoxItem Content="None" Tag="none" />
+                                <ComboBoxItem Content="Percent %" Tag="percent" />
+                                <ComboBoxItem Content="Fixed (Rp)" Tag="fixed" />
+                            </ComboBox>
+                            <StackPanel Spacing="4">
+                                <NumberBox x:Name="TaxValueBox" Header="Tax value" Minimum="0" />
+                                <TextBlock x:Name="TaxValueBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </local:AdaptiveGrid>
+                        <Button Content="Save tax settings" Click="SaveTax_Click" />
+                    </StackPanel>
+                </Expander>
+                <Expander x:Name="ReceiptExpander" Style="{StaticResource SettingsExpander}" AutomationProperties.Name="Print receipt setup">
+                    <Expander.Header>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource SettingsIconBadge}" Background="#20D99A00">
+                                <FontIcon Glyph="&#xE8A5;" FontSize="18" Foreground="#D99A00" AutomationProperties.AccessibilityView="Raw" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                <TextBlock Text="Print receipt setup" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Customize clinic details, margins, fonts and receipt sections" Style="{StaticResource SettingsDescription}" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander.Header>
+                    <StackPanel Spacing="10" Padding="16">
                         <StackPanel Spacing="4">
-                            <NumberBox x:Name="TaxValueBox" Header="Tax value" Minimum="0" />
-                            <TextBlock x:Name="TaxValueBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                            <TextBox x:Name="ClinicNameBox" Header="Clinic name *" />
+                            <TextBlock x:Name="ClinicNameBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
                         </StackPanel>
-                    </local:AdaptiveGrid>
-                    <Button Content="Save tax settings" Click="SaveTax_Click" />
-                </StackPanel>
-            </Border>
-
-            <Border Style="{StaticResource CardBorder}" Padding="16">
-                <StackPanel Spacing="10">
-                    <local:WrapPanel Spacing="8">
-                        <TextBlock Text="Operators" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" TextWrapping="Wrap" />
-                        <Button Content="Add" Click="AddOperator_Click" />
-                    </local:WrapPanel>
-                    <ListView x:Name="OperatorList" SelectionMode="None">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
-
-                                    <TextBlock Text="{Binding Display}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                    <Button Content="Delete" ContentTemplate="{StaticResource DeleteButtonContentTemplate}" Click="DeleteOperator_Click" Tag="{Binding Id}" />
-                                </local:AdaptiveGrid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </StackPanel>
-            </Border>
-
-            <Border Style="{StaticResource CardBorder}" Padding="16">
-                <StackPanel Spacing="10">
-                    <local:WrapPanel Spacing="8">
-                        <TextBlock Text="Treatments" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" TextWrapping="Wrap" />
-                        <Button Content="Add" Click="AddTreatment_Click" />
-                    </local:WrapPanel>
-                    <ListView x:Name="TreatmentList" SelectionMode="None">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <local:AdaptiveGrid ColumnSpacing="8" Columns="3" MinimumColumnWidth="140">
-
-                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                    <TextBlock Text="{Binding Price}" VerticalAlignment="Center" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                    <Button Content="Delete" ContentTemplate="{StaticResource DeleteButtonContentTemplate}" Click="DeleteTreatment_Click" Tag="{Binding Id}" />
-                                </local:AdaptiveGrid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </StackPanel>
-            </Border>
-
-            <Border Style="{StaticResource CardBorder}" Padding="16">
-                <StackPanel Spacing="10">
-                    <local:WrapPanel Spacing="8">
-                        <TextBlock Text="Custom examinations" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" TextWrapping="Wrap" />
-                        <Button Content="Add" Click="AddExam_Click" />
-                    </local:WrapPanel>
-                    <ListView x:Name="ExamList" SelectionMode="None">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
-
-                                    <TextBlock Text="{Binding Display}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                    <Button Content="Delete" ContentTemplate="{StaticResource DeleteButtonContentTemplate}" Click="DeleteExam_Click" Tag="{Binding Id}" />
-                                </local:AdaptiveGrid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </StackPanel>
-            </Border>
-
-            <Border Style="{StaticResource CardBorder}" Padding="16">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Backups" FontWeight="SemiBold" FontSize="16" TextWrapping="Wrap" />
-                    <TextBlock Text="Encrypted copies of the whole database, stored on this PC." Opacity="0.6" TextWrapping="Wrap" />
-                    <Button Content="Create backup now" Click="BackupNow_Click" Style="{StaticResource AccentButtonStyle}" />
-                    <ListView x:Name="BackupList" SelectionMode="None">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
-
-                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                    <Button Content="Restore" Click="RestoreBackup_Click" Tag="{Binding Path}" />
-                                </local:AdaptiveGrid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </StackPanel>
-            </Border>
-
-            <Border Style="{StaticResource CardBorder}" Padding="16">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Change password" FontWeight="SemiBold" FontSize="16" TextWrapping="Wrap" />
-                    <TextBlock x:Name="PwError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
-                    <StackPanel Spacing="4">
-                        <PasswordBox x:Name="CurrentPwBox" Header="Current password *" />
-                        <TextBlock x:Name="CurrentPwBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                        <TextBox x:Name="HeaderBox" Header="Receipt header" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
+                        <TextBox x:Name="FooterBox" Header="Receipt footer" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
+                        <local:WrapPanel Spacing="8">
+                            <Button Content="Save receipt setup" Click="SaveClinic_Click" Style="{StaticResource AccentButtonStyle}" />
+                            <Button Content="Reset layout to defaults" Click="ResetReceipt_Click" />
+                        </local:WrapPanel>
+                        <TextBlock x:Name="ReceiptSaveStatus" Style="{StaticResource SettingsDescription}" AutomationProperties.LiveSetting="Polite" />
+                        <TextBlock Text="Saved settings apply to new invoices. Previously issued invoices keep their original clinic details and layout." Style="{StaticResource SettingsDescription}" />
+                        <local:ReceiptSetupControl x:Name="ReceiptDesigner" Margin="0,6,0,0" />
+                        <Button Content="Save receipt setup" Click="SaveClinic_Click" Style="{StaticResource AccentButtonStyle}" />
                     </StackPanel>
-                    <StackPanel Spacing="4">
-                        <PasswordBox x:Name="NewPwBox" Header="New password *" />
-                        <TextBlock x:Name="NewPwBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
-                    </StackPanel>
-                    <StackPanel Spacing="4">
-                        <PasswordBox x:Name="ConfirmPwBox" Header="Confirm new password *" />
-                        <TextBlock x:Name="ConfirmPwBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
-                    </StackPanel>
-                    <Button Content="Change password" Click="ChangePw_Click" />
-                </StackPanel>
-            </Border>
+                </Expander>
+            </StackPanel>
+            <StackPanel Spacing="8">
+                <TextBlock Text="DATA &amp; SYNC" Style="{StaticResource SettingsSectionLabel}" />
+                <Expander x:Name="BackupsExpander" Style="{StaticResource SettingsExpander}" AutomationProperties.Name="Backup &amp; restore">
+                    <Expander.Header>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource SettingsIconBadge}" Background="#2022C55E">
+                                <FontIcon Glyph="&#xE753;" FontSize="18" Foreground="#22C55E" AutomationProperties.AccessibilityView="Raw" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                <TextBlock Text="Backup &amp; restore" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Create and restore encrypted backups on this PC" Style="{StaticResource SettingsDescription}" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander.Header>
+                    <StackPanel Spacing="10" Padding="16">
+                        <TextBlock Text="Encrypted copies of the whole database, stored on this PC." Opacity="0.6" TextWrapping="Wrap" />
+                        <Button Content="Create backup now" Click="BackupNow_Click" Style="{StaticResource AccentButtonStyle}" />
+                        <ListView x:Name="BackupList" SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
 
-            <TextBlock x:Name="AboutText" Opacity="0.6" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                        <Button Content="Restore" Click="RestoreBackup_Click" Tag="{Binding Path}" />
+                                    </local:AdaptiveGrid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+            <StackPanel Spacing="8">
+                <TextBlock Text="SECURITY &amp; ACCESS" Style="{StaticResource SettingsSectionLabel}" />
+                <Expander x:Name="PasswordExpander" Style="{StaticResource SettingsExpander}" AutomationProperties.Name="Password and security">
+                    <Expander.Header>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource SettingsIconBadge}" Background="#20F43F5E">
+                                <FontIcon Glyph="&#xE72E;" FontSize="18" Foreground="#F43F5E" AutomationProperties.AccessibilityView="Raw" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                <TextBlock Text="Password and security" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Change your app password and re-encrypt your database" Style="{StaticResource SettingsDescription}" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander.Header>
+                    <StackPanel Spacing="10" Padding="16">
+                        <TextBlock x:Name="PwError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                        <StackPanel Spacing="4">
+                            <PasswordBox x:Name="CurrentPwBox" Header="Current password *" />
+                            <TextBlock x:Name="CurrentPwBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Spacing="4">
+                            <PasswordBox x:Name="NewPwBox" Header="New password *" />
+                            <TextBlock x:Name="NewPwBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Spacing="4">
+                            <PasswordBox x:Name="ConfirmPwBox" Header="Confirm new password *" />
+                            <TextBlock x:Name="ConfirmPwBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Content="Change password" Click="ChangePw_Click" />
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+            <StackPanel Spacing="8">
+                <TextBlock Text="ABOUT" Style="{StaticResource SettingsSectionLabel}" />
+                <Border Style="{StaticResource CardBorder}" Padding="16">
+                    <TextBlock x:Name="AboutText" Style="{StaticResource SettingsDescription}" />
+                </Border>
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </Page>

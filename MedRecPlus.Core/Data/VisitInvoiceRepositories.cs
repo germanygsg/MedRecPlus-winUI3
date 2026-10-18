@@ -232,6 +232,23 @@ public sealed class InvoiceRepository
             new { query, like, status, fromIso, toIso, limit, offset }).ToList();
     }
 
+    public int Count(string query = "", string? status = null,
+        string? fromIso = null, string? toIso = null)
+    {
+        using var conn = _db.Open();
+        var like = $"%{query}%";
+        return conn.ExecuteScalar<int>(
+            """
+            SELECT count(*) FROM invoices
+            WHERE deleted_at IS NULL
+              AND (@status IS NULL OR status = @status)
+              AND (@fromIso IS NULL OR date >= @fromIso)
+              AND (@toIso IS NULL OR date < @toIso)
+              AND (invoice_number LIKE @like OR patient_name LIKE @like OR @query = '')
+            """,
+            new { query, like, status, fromIso, toIso });
+    }
+
     public void ApplyPayment(long invoiceId, long amountCents, string method, string? note,
         string newStatus, SqliteConnection conn, SqliteTransaction tx)
     {

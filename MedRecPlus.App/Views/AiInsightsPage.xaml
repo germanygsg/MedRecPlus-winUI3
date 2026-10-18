@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MedRecPlus.App">
 
-    <Grid Padding="24,0,24,24" RowSpacing="12">
+    <Grid Padding="24,24,24,24" RowSpacing="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" /><RowDefinition Height="*" />

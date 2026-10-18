@@ -75,27 +75,7 @@ public sealed partial class InvoiceDetailPage : Page
     {
         if (_receipt == null) return;
         _paperDescription = description;
-        var pages = InvoicePaperLayout.BuildPages(_receipt, ReceiptPanel, description);
-        ReceiptPanel.Children.Clear();
-        foreach (var page in pages)
-        {
-            // Scale the whole sheet down in a narrow window; never reflow the
-            // receipt according to the window width or change its page breaks.
-            ReceiptPanel.Children.Add(new Viewbox
-            {
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Stretch = Stretch.Uniform,
-                StretchDirection = StretchDirection.DownOnly,
-                MaxWidth = InvoicePaperLayout.PaperSize.Width + 2,
-                Child = new Border
-                {
-                    BorderThickness = new Thickness(1),
-                    BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.LightGray),
-                    Child = page,
-                },
-            });
-        }
-        ReceiptPanel.UpdateLayout();
+        InvoicePaperLayout.ShowPreview(_receipt, ReceiptPanel, description);
     }
 
     private void Back_Click(object sender, RoutedEventArgs e) =>

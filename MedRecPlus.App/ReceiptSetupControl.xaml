@@ -1,0 +1,145 @@
+<UserControl
+    x:Class="MedRecPlus.App.ReceiptSetupControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MedRecPlus.App">
+    <UserControl.Resources>
+        <Style x:Key="ReceiptSectionTitle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="AutomationProperties.HeadingLevel" Value="Level3" />
+        </Style>
+        <Style x:Key="ReceiptHint" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style x:Key="ReceiptSwitch" TargetType="ToggleSwitch">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="OnContent" Value="Shown" />
+            <Setter Property="OffContent" Value="Hidden" />
+        </Style>
+    </UserControl.Resources>
+    <StackPanel Spacing="16">
+        <Border Style="{StaticResource CardBorder}" Padding="16">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Margins" Style="{StaticResource ReceiptSectionTitle}" />
+                <TextBlock Text="White space around the receipt, in millimetres (0–25 mm). Printer margins are respected when printing. Paper: 120 × 138 mm." Style="{StaticResource ReceiptHint}" />
+                <local:AdaptiveGrid Columns="4" MinimumColumnWidth="130" ColumnSpacing="16">
+                    <StackPanel Spacing="4">
+                        <NumberBox x:Name="TopBox" Header="Top (mm)" Minimum="0" Maximum="25" SmallChange="0.5" SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Name="TopBoxError" Style="{StaticResource FieldErrorStyle}" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <NumberBox x:Name="RightBox" Header="Right (mm)" Minimum="0" Maximum="25" SmallChange="0.5" SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Name="RightBoxError" Style="{StaticResource FieldErrorStyle}" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <NumberBox x:Name="BottomBox" Header="Bottom (mm)" Minimum="0" Maximum="25" SmallChange="0.5" SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Name="BottomBoxError" Style="{StaticResource FieldErrorStyle}" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <NumberBox x:Name="LeftBox" Header="Left (mm)" Minimum="0" Maximum="25" SmallChange="0.5" SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Name="LeftBoxError" Style="{StaticResource FieldErrorStyle}" />
+                    </StackPanel>
+                </local:AdaptiveGrid>
+            </StackPanel>
+        </Border>
+        <Border Style="{StaticResource CardBorder}" Padding="16">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Font" Style="{StaticResource ReceiptSectionTitle}" />
+                <TextBlock Text="The same typeface is used in the preview and on the printed receipt." Style="{StaticResource ReceiptHint}" />
+                <ComboBox x:Name="FontBox" Header="Receipt font" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="Inter" Tag="inter" />
+                    <ComboBoxItem Content="VT323 (Dot Matrix)" Tag="vt323" />
+                    <ComboBoxItem Content="Courier New" Tag="courier" />
+                </ComboBox>
+                <TextBlock x:Name="FontHint" Style="{StaticResource ReceiptHint}" />
+            </StackPanel>
+        </Border>
+        <Border Style="{StaticResource CardBorder}" Padding="16">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Font sizes" Style="{StaticResource ReceiptSectionTitle}" />
+                <TextBlock Text="Text size for each section, in pixels (8–36 px)." Style="{StaticResource ReceiptHint}" />
+                <local:AdaptiveGrid Columns="3" MinimumColumnWidth="150" ColumnSpacing="16" RowSpacing="12">
+                    <StackPanel Spacing="4">
+                        <NumberBox x:Name="ClinicSizeBox" Header="Clinic header (px)" Minimum="8" Maximum="36" SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Name="ClinicSizeBoxError" Style="{StaticResource FieldErrorStyle}" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <NumberBox x:Name="TitleSizeBox" Header="Receipt title (px)" Minimum="8" Maximum="36" SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Name="TitleSizeBoxError" Style="{StaticResource FieldErrorStyle}" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <NumberBox x:Name="InfoSizeBox" Header="Patient / invoice info (px)" Minimum="8" Maximum="36" SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Name="InfoSizeBoxError" Style="{StaticResource FieldErrorStyle}" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <NumberBox x:Name="TreatmentSizeBox" Header="Treatments (px)" Minimum="8" Maximum="36" SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Name="TreatmentSizeBoxError" Style="{StaticResource FieldErrorStyle}" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <NumberBox x:Name="TotalSizeBox" Header="Total (px)" Minimum="8" Maximum="36" SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Name="TotalSizeBoxError" Style="{StaticResource FieldErrorStyle}" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <NumberBox x:Name="FooterSizeBox" Header="Footer (px)" Minimum="8" Maximum="36" SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Name="FooterSizeBoxError" Style="{StaticResource FieldErrorStyle}" />
+                    </StackPanel>
+                </local:AdaptiveGrid>
+            </StackPanel>
+        </Border>
+        <Border Style="{StaticResource CardBorder}" Padding="16">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Line spacing" Style="{StaticResource ReceiptSectionTitle}" />
+                <TextBlock Text="Space between lines, as a multiple of the text size." Style="{StaticResource ReceiptHint}" />
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <Slider x:Name="SpacingSlider" Minimum="0.8" Maximum="2" StepFrequency="0.05" Value="1" AutomationProperties.Name="Receipt line spacing" />
+                    <TextBlock x:Name="SpacingValue" Grid.Column="1" MinWidth="52" VerticalAlignment="Center" />
+                </Grid>
+            </StackPanel>
+        </Border>
+        <Border Style="{StaticResource CardBorder}" Padding="16">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Sections" Style="{StaticResource ReceiptSectionTitle}" />
+                <TextBlock Text="Choose which parts appear in the preview and on the printed receipt." Style="{StaticResource ReceiptHint}" />
+                <local:AdaptiveGrid Columns="2" MinimumColumnWidth="230" ColumnSpacing="24" RowSpacing="12">
+                    <ToggleSwitch x:Name="ClinicSwitch" Header="Clinic header" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="TitleSwitch" Header="Receipt title" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="PatientSwitch" Header="Billed-to (patient) block" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="InfoSwitch" Header="Invoice info block" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="TreatmentsSwitch" Header="Treatments list" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="NotesSwitch" Header="Treatment notes" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="TotalsSwitch" Header="Subtotal / total" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="TaxSwitch" Header="VAT / tax breakdown" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="OperatorSwitch" Header="Operator info box" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="FooterSwitch" Header="Footer" Style="{StaticResource ReceiptSwitch}" />
+                </local:AdaptiveGrid>
+            </StackPanel>
+        </Border>
+        <Border Style="{StaticResource CardBorder}" Padding="16">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Divider lines" Style="{StaticResource ReceiptSectionTitle}" />
+                <TextBlock Text="Show or hide each divider independently." Style="{StaticResource ReceiptHint}" />
+                <local:AdaptiveGrid Columns="2" MinimumColumnWidth="230" ColumnSpacing="24" RowSpacing="12">
+                    <ToggleSwitch x:Name="HeaderDividerSwitch" Header="Header divider" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="DetailsDividerSwitch" Header="Details divider" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="TreatmentsDividerSwitch" Header="Treatments divider" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="TotalDividerSwitch" Header="Total divider" Style="{StaticResource ReceiptSwitch}" />
+                    <ToggleSwitch x:Name="FooterDividerSwitch" Header="Footer divider" Style="{StaticResource ReceiptSwitch}" />
+                </local:AdaptiveGrid>
+            </StackPanel>
+        </Border>
+        <Border Style="{StaticResource CardBorder}" Padding="16">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Live preview" Style="{StaticResource ReceiptSectionTitle}" />
+                <TextBlock Text="Sample data shown on 120 × 138 mm paper. Preview and printing share the same layout; your printer may add its own minimum margins." Style="{StaticResource ReceiptHint}" />
+                <TextBlock x:Name="PreviewError" Style="{StaticResource FieldErrorStyle}" />
+                <StackPanel x:Name="PreviewPanel" Spacing="12" HorizontalAlignment="Stretch" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

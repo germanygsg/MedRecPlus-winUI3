@@ -47,7 +47,7 @@
             </Style>
         </ResourceDictionary>
     </Page.Resources>
-    <ScrollViewer x:Name="DashboardScroll" Padding="24,0,24,24" HorizontalScrollBarVisibility="Disabled">
+    <ScrollViewer x:Name="DashboardScroll" Padding="24,24,24,24" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="20">
             <local:AdaptiveGrid x:Name="BentoGrid" Columns="2" MinimumColumnWidth="350" ColumnSpacing="20" RowSpacing="20">
                 <Border x:Name="PatientsCard" Style="{StaticResource BentoCard}" Background="{ThemeResource PatientCardBrush}">

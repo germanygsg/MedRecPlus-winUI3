@@ -112,7 +112,8 @@
                 <CornerRadius x:Key="NavigationViewMinimalContentGridCornerRadius">0</CornerRadius>
             </NavigationView.Resources>
             <NavigationView.Header>
-                <!-- Outside the page's scroll viewer so the section stays visible. -->
+                <!-- The shell toggles this header: sidebar pages get none (NavView.Header
+                     is nulled out), drill-down pages show their contextual title. -->
                 <TextBlock x:Name="SectionTitle" Text="Dashboard"
                            FontSize="28" FontWeight="SemiBold"
                            Margin="24,12,24,16" TextTrimming="CharacterEllipsis"

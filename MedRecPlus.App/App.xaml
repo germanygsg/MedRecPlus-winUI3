@@ -2,7 +2,8 @@
     x:Class="MedRecPlus.App.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="using:Microsoft.UI.Xaml.Controls">
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -80,6 +81,104 @@
                 <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
                 <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="CornerRadius" Value="8" />
+            </Style>
+
+            <!-- Shared data-table visuals:Patients / Appointments / Invoices pages. -->
+            <Style x:Key="TableItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="MinHeight" Value="0" />
+            </Style>
+            <SolidColorBrush x:Key="RecordPillBrush" Color="#207C3AED" />
+            <SolidColorBrush x:Key="RowActionTintBrush" Color="{ThemeResource SystemAccentColor}" Opacity="0.14" />
+            <SolidColorBrush x:Key="StatusChipPaidBrush" Color="#2610B981" />
+            <SolidColorBrush x:Key="StatusChipUnpaidBrush" Color="#26F59E0B" />
+            <SolidColorBrush x:Key="StatusChipVoidBrush" Color="#266B7280" />
+            <SolidColorBrush x:Key="StatusPaidTextBrush" Color="#059669" />
+            <SolidColorBrush x:Key="StatusUnpaidTextBrush" Color="#B45309" />
+            <SolidColorBrush x:Key="StatusVoidTextBrush" Color="#6B7280" />
+            <Style x:Key="RowActionButton" TargetType="Button">
+                <Setter Property="Width" Value="34" />
+                <Setter Property="Height" Value="30" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="FontSize" Value="14" />
+            </Style>
+            <Style x:Key="RowViewButton" TargetType="Button" BasedOn="{StaticResource RowActionButton}">
+                <Setter Property="Background" Value="{StaticResource RowActionTintBrush}" />
+                <Setter Property="Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+            </Style>
+            <Style x:Key="RowEditButton" TargetType="Button" BasedOn="{StaticResource RowActionButton}">
+                <Setter Property="Background" Value="#2610B981" />
+                <Setter Property="Foreground" Value="#059669" />
+            </Style>
+            <Style x:Key="RowDeleteButton" TargetType="Button" BasedOn="{StaticResource RowActionButton}">
+                <Setter Property="Background" Value="#26DC2626" />
+                <Setter Property="Foreground" Value="#DC2626" />
+            </Style>
+            <Style x:Key="PageNavButton" TargetType="Button">
+                <Setter Property="Width" Value="30" />
+                <Setter Property="Height" Value="30" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+            <Style x:Key="TableColumnDragThumbStyle" TargetType="primitives:Thumb">
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="MinHeight" Value="0" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="VerticalAlignment" Value="Stretch" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="primitives:Thumb">
+                            <Grid Background="Transparent">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter Target="Grip.Background" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+                                                <Setter Target="Grip.Width" Value="2" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="Grip.Background" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+                                                <Setter Target="Grip.Width" Value="2" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <Border x:Name="Grip" Width="1" Margin="0,2" HorizontalAlignment="Center"
+                                        Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="TableColumnResizeHandleStyle" TargetType="Control">
+                <Setter Property="Width" Value="10" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="MinHeight" Value="0" />
+                <Setter Property="HorizontalAlignment" Value="Right" />
+                <Setter Property="VerticalAlignment" Value="Stretch" />
+                <Setter Property="Margin" Value="0,-6,-5,-6" />
+                <Setter Property="UseSystemFocusVisuals" Value="True" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Control">
+                            <!-- Thumb starts a pointer drag only when it has a layout parent. -->
+                            <Grid Background="Transparent">
+                                <primitives:Thumb x:Name="DragThumb" IsTabStop="False"
+                                                  Style="{StaticResource TableColumnDragThumbStyle}" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
         </ResourceDictionary>
     </Application.Resources>

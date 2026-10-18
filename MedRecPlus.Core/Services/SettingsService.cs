@@ -44,6 +44,21 @@ public sealed class SettingsService
         using var conn = _db.Open();
         conn.Execute("DELETE FROM settings WHERE key = @key", new { key });
     }
+
+    public void SaveReceiptSetup(ClinicProfile clinic, ReceiptLayout layout)
+    {
+        using var conn = _db.Open();
+        using var tx = conn.BeginTransaction();
+        foreach (var (key, value) in new[] {
+            (SettingKeys.ClinicProfile, JsonSerializer.Serialize(clinic, JsonOpts)),
+            (SettingKeys.ReceiptDocument, JsonSerializer.Serialize(layout.Normalize(), JsonOpts)),
+        })
+            conn.Execute("""
+                INSERT INTO settings (key, value, updated_at) VALUES (@key, @value, @now)
+                ON CONFLICT(key) DO UPDATE SET value = @value, updated_at = @now
+                """, new { key, value, now = DbTime.Now() }, tx);
+        tx.Commit();
+    }
 }
 
 /// <summary>Well-known settings keys.</summary>

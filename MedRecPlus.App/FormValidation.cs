@@ -38,6 +38,10 @@ internal sealed class FormValidation
                 {
                     if (Descendant<TextBox>(number) is { } editor && editor != subscribedEditor)
                     {
+                        // NumberBox.VerticalContentAlignment does not consistently reach its template editor.
+                        // Center the actual TextBox content so the displayed value aligns with other inputs.
+                        editor.VerticalAlignment = VerticalAlignment.Stretch;
+                        editor.VerticalContentAlignment = VerticalAlignment.Center;
                         if (subscribedEditor != null) subscribedEditor.TextChanged -= onTextChanged;
                         subscribedEditor = editor;
                         editor.TextChanged += onTextChanged;

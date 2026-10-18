@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Foundation;
@@ -61,13 +62,29 @@ public sealed class AdaptiveGrid : Panel
 /// <summary>Toolbars and chips wrap as whole items, keeping every action reachable.</summary>
 public sealed class WrapPanel : Panel
 {
+    // Children hidden at measure time never got measured, and the framework does not re-run
+    // a custom panel's measure when a child later toggles visibility (e.g. a toolbar button
+    // appearing on selection) — so track children and re-flow the row ourselves.
+    private readonly HashSet<UIElement> _trackedChildren = new();
+
     public static readonly DependencyProperty SpacingProperty = DependencyProperty.Register(
         nameof(Spacing), typeof(double), typeof(WrapPanel), new PropertyMetadata(8d,
             (sender, _) => ((WrapPanel)sender).InvalidateMeasure()));
     public double Spacing { get => (double)GetValue(SpacingProperty); set => SetValue(SpacingProperty, value); }
 
+    private void TrackChildren()
+    {
+        foreach (var child in Children)
+        {
+            if (_trackedChildren.Add(child))
+                child.RegisterPropertyChangedCallback(FrameworkElement.VisibilityProperty,
+                    (_, _) => InvalidateMeasure());
+        }
+    }
+
     private Size Layout(double availableWidth, bool arrange)
     {
+        TrackChildren();
         var width = double.IsFinite(availableWidth) ? Math.Max(0, availableWidth) : double.PositiveInfinity;
         double x = 0, y = 0, rowHeight = 0, usedWidth = 0;
         foreach (var child in Children.Where(child => child.Visibility != Visibility.Collapsed))

@@ -1,5 +1,21 @@
 # Native app checks
 
+## Column visibility and resizing
+
+Run `./verification/Build-ColumnChecks.ps1` from `src` on Windows. It uses a
+temporary app copy and a separate sample database to check each table's checkbox
+picker, header/row collapse and restoration, selection preservation, pagination,
+recycled rows, independent page preferences, and recovery from malformed settings.
+It also checks resize handles, column width changes, minimum widths, horizontal
+scrolling, and width preservation when hiding columns or paging. It launches
+twice to verify saved visibility and widths after a full app restart. Results and
+light/dark screenshots are written beside the copied executable.
+
+The initial run sends Windows mouse input to each page's divider and verifies
+that the header and rows follow the actual drag distance. The sample app briefly
+comes forward for these checks and then restores the pointer and previous window.
+Run `./verification/Build-ColumnChecks.ps1 -PointerOnly` for just this regression.
+
 ## Sidebar resizing
 
 Run `./verification/Build-NavigationChecks.ps1` from `src` on Windows. It uses
@@ -54,6 +70,16 @@ event. Verify the system print dialog and physical output manually with a printe
 Screen checks compare every text block's content, wrapping width and position
 with the printed pages, including larger driver margins and a narrow window.
 The screen scales whole sheets to fit without reflowing their contents.
+
+Receipt setup checks also edit the actual settings controls and verify immediate
+sample preview changes, millimetre margins, all six font sizes, bundled VT323,
+line spacing, ten section switches and five independent divider switches. They
+save and reopen settings through a fresh encrypted database connection, reject
+blank measurements, exercise reset/default recovery, and verify that new invoices
+retain their issue-time layout after settings change. Invoices issued before
+the designer retain their original renderer. Treatment notes are checked across
+multiple pages. `receipt-setup-controls.png` and `receipt-setup-preview.png`
+capture the designer and its sample receipt.
 
 Set the printer's custom paper to **width 120 mm, height 138 mm**, portrait.
 The app exposes paper selection and flags a different driver media size in the
