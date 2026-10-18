@@ -24,13 +24,15 @@
             <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="130">
 
                 <StackPanel Spacing="4">
-                    <ComboBox x:Name="GenderBox" Header="Gender *" HorizontalAlignment="Stretch">
+                    <TextBlock Text="Gender *" />
+                    <ComboBox x:Name="GenderBox" Height="40" HorizontalAlignment="Stretch">
                         <ComboBoxItem Content="Mr." /><ComboBoxItem Content="Ms." /><ComboBoxItem Content="Mx." />
                     </ComboBox>
                     <TextBlock x:Name="GenderBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
                 </StackPanel>
                 <StackPanel Spacing="4">
-                    <NumberBox x:Name="AgeBox" Header="Age *" Minimum="0" Maximum="150" />
+                    <TextBlock Text="Age *" />
+                    <NumberBox x:Name="AgeBox" Height="40" VerticalContentAlignment="Center" Minimum="0" Maximum="150" />
                     <TextBlock x:Name="AgeBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
                 </StackPanel>
             </local:AdaptiveGrid>

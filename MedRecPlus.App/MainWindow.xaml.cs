@@ -65,7 +65,7 @@ public sealed partial class MainWindow : Window
     {
         AuthFrame.Visibility = Visibility.Collapsed;
         NavView.Visibility = Visibility.Visible;
-        AppTitleBar.IsBackButtonVisible = true;
+        AppTitleBar.IsBackButtonVisible = false;
         SidebarToggleButton.Visibility = Visibility.Visible;
         ShellSearchHost.Visibility = Visibility.Visible;
         ShellSearchBox.Visibility = Visibility.Visible;
@@ -130,6 +130,7 @@ public sealed partial class MainWindow : Window
             ? (e.Parameter as string ?? "").Trim() : "";
         ShellSearchBox.ItemsSource = null;
         ShellSearchBox.IsSuggestionListOpen = false;
+        AppTitleBar.IsBackButtonVisible = e.SourcePageType != typeof(DashboardPage);
         AppTitleBar.IsBackButtonEnabled = ContentFrame.CanGoBack;
         var tag = e.SourcePageType == typeof(PatientDetailPage) ? "Patients"
             : e.SourcePageType == typeof(VisitDetailPage) ? "Appointments"
