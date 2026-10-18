@@ -20,6 +20,8 @@ public static class Dialogs
             CloseButtonText = "Cancel",
             XamlRoot = root,
         };
+        if (ok == "Delete")
+            dlg.PrimaryButtonStyle = (Style)Application.Current.Resources["DeleteConfirmationButtonStyle"];
         return await dlg.ShowAsync() == ContentDialogResult.Primary;
     }
 

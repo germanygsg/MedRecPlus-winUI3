@@ -8,15 +8,25 @@ namespace MedRecPlus.App.Views;
 public sealed partial class VisitDialog : ContentDialog
 {
     private Patient? _patient;
+    private readonly FormValidation _validation = new();
+    private readonly FormValidation _treatmentValidation = new();
     private readonly ObservableCollection<Patient> _patientResults = new();
     private readonly ObservableCollection<IcdCode> _icdResults = new();
     private readonly ObservableCollection<IcdRow> _icdSelected = new();
     private readonly ObservableCollection<TreatmentRow> _treatments = new();
     private readonly List<TextBox> _customExamBoxes = new();
+    private XamlRoot? _xamlRoot;
 
     public VisitDialog(long? preselectPatientId = null)
     {
         InitializeComponent();
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+        _validation.Add(PatientSearchBox, PatientSearchBoxError, () => _patient == null ? "Select a patient." : null);
+        _validation.Add(OperatorBox, OperatorBoxError, () => OperatorBox.SelectedItem == null ? "Select an operator." : null);
+        _treatmentValidation.Add(NewTreatNameBox, NewTreatNameBoxError, () => FormValidation.Required(NewTreatNameBox.Text, "Treatment name"));
+        _treatmentValidation.Add(NewTreatPriceBox, NewTreatPriceBoxError, () => MedRecPlus.Core.Services.RupiahAmount.TryParseCents(NewTreatPriceBox.Text, out _)
+            ? null : "Enter a whole-rupiah price of at least Rp 1 (e.g. 300000).");
         PatientResults.ItemsSource = _patientResults;
         IcdResults.ItemsSource = _icdResults;
         IcdChips.ItemsSource = _icdSelected;
@@ -46,6 +56,30 @@ public sealed partial class VisitDialog : ContentDialog
         PrimaryButtonClick += OnPrimary;
     }
 
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        if (_xamlRoot != null) return;
+        _xamlRoot = XamlRoot;
+        if (_xamlRoot is null) return;
+        UpdateScrollerHeight();
+        _xamlRoot.Changed += OnXamlRootChanged;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (_xamlRoot is null) return;
+        _xamlRoot.Changed -= OnXamlRootChanged;
+        _xamlRoot = null;
+    }
+
+    private void OnXamlRootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => UpdateScrollerHeight();
+
+    private void UpdateScrollerHeight()
+    {
+        var height = _xamlRoot?.Size.Height ?? 0;
+        if (height > 0) ContentScroller.MaxHeight = Math.Max(120, height - 150);
+    }
+
     private void UpdatePatientSelection()
     {
         var hasPatient = _patient != null;
@@ -56,6 +90,7 @@ public sealed partial class VisitDialog : ContentDialog
         _patientResults.Clear();
         PatientResults.Visibility = Visibility.Collapsed;
         PatientSearchBox.Text = "";
+        _validation.Recheck();
     }
 
     private void ClearPatient_Click(object sender, RoutedEventArgs e)
@@ -129,18 +164,14 @@ public sealed partial class VisitDialog : ContentDialog
     {
         var show = NewTreatmentForm.Visibility != Visibility.Visible;
         NewTreatmentForm.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
-        NewTreatError.Visibility = Visibility.Collapsed;
+        _treatmentValidation.Reset();
     }
 
     private void NewTreatmentSave_Click(object sender, RoutedEventArgs e)
     {
         var name = NewTreatNameBox.Text.Trim();
-        if (string.IsNullOrEmpty(name) || !MedRecPlus.Core.Services.RupiahAmount.TryParseCents(NewTreatPriceBox.Text, out var priceCents))
-        {
-            NewTreatError.Text = "Enter a name and a whole-rupiah price of at least Rp 1 (e.g. 300000).";
-            NewTreatError.Visibility = Visibility.Visible;
-            return;
-        }
+        if (!_treatmentValidation.Validate()) return;
+        MedRecPlus.Core.Services.RupiahAmount.TryParseCents(NewTreatPriceBox.Text, out var priceCents);
         AppSession.Treatments.Create(name, null, priceCents, null);
         _treatments.Clear();
         foreach (var t in AppSession.Treatments.GetAll())
@@ -148,6 +179,7 @@ public sealed partial class VisitDialog : ContentDialog
         NewTreatNameBox.Text = "";
         NewTreatPriceBox.Text = "";
         NewTreatmentForm.Visibility = Visibility.Collapsed;
+        _treatmentValidation.Reset();
     }
 
     private void RefreshTreatments()
@@ -160,11 +192,11 @@ public sealed partial class VisitDialog : ContentDialog
     private void OnPrimary(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         args.Cancel = true;
+        ErrorText.Visibility = Visibility.Collapsed;
+        if (!_validation.Validate()) return;
         try
         {
-            if (_patient == null) throw new InvalidOperationException("Select a patient first.");
-            if (OperatorBox.SelectedItem is not ComboBoxItem opItem || opItem.Tag is not long opId)
-                throw new InvalidOperationException("Select an operator.");
+            var opId = (long)((ComboBoxItem)OperatorBox.SelectedItem).Tag;
 
             var vitals = new Dictionary<string, object?>
             {
@@ -185,7 +217,7 @@ public sealed partial class VisitDialog : ContentDialog
             var discValue = double.IsNaN(discRaw) ? 0m : (decimal)discRaw;
 
             AppSession.Visits.CreateVisit(
-                _patient.Id, opId, vitals, items, discType, discValue,
+                _patient!.Id, opId, vitals, items, discType, discValue,
                 NotesBox.Text.Trim(), null,
                 _icdSelected.Select(r => r.Code2).ToList(), AppSession.Actor);
             Tag = "saved";

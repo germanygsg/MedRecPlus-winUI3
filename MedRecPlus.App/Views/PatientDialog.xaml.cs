@@ -9,12 +9,25 @@ namespace MedRecPlus.App.Views;
 public sealed partial class PatientDialog : ContentDialog
 {
     private readonly long? _patientId;
+    private readonly FormValidation _validation = new();
     private readonly ObservableCollection<IcdCode> _results = new();
     private readonly ObservableCollection<IcdRow> _selected = new();
+    private XamlRoot? _xamlRoot;
 
     public PatientDialog(long? patientId = null)
     {
         InitializeComponent();
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+        _validation.Add(NameBox, NameBoxError, () => FormValidation.Required(NameBox.Text, "Patient name"));
+        _validation.Add(GenderBox, GenderBoxError, () => GenderBox.SelectedItem == null ? "Select a gender." : null);
+        _validation.Add(AgeBox, AgeBoxError, () =>
+        {
+            var age = FormValidation.Number(AgeBox);
+            return !double.IsFinite(age) ? "Age is required." :
+                age < 0 || age > 150 || age != Math.Truncate(age) ? "Enter a whole age from 0 to 150." : null;
+        });
+        _validation.Add(BasisBox, BasisBoxError, () => BasisBox.SelectedItem == null ? "Select a lawful basis." : null);
         _patientId = patientId;
         IcdResults.ItemsSource = _results;
         IcdSelected.ItemsSource = _selected;
@@ -52,6 +65,30 @@ public sealed partial class PatientDialog : ContentDialog
         PrimaryButtonClick += OnPrimary;
     }
 
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        if (_xamlRoot != null) return;
+        _xamlRoot = XamlRoot;
+        if (_xamlRoot is null) return;
+        UpdateScrollerHeight();
+        _xamlRoot.Changed += OnXamlRootChanged;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (_xamlRoot is null) return;
+        _xamlRoot.Changed -= OnXamlRootChanged;
+        _xamlRoot = null;
+    }
+
+    private void OnXamlRootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => UpdateScrollerHeight();
+
+    private void UpdateScrollerHeight()
+    {
+        var height = _xamlRoot?.Size.Height ?? 0;
+        if (height > 0) ContentScroller.MaxHeight = Math.Max(120, height - 150);
+    }
+
     private void SelectBasis(string? basis)
     {
         for (var i = 0; i < BasisBox.Items.Count; i++)
@@ -62,14 +99,13 @@ public sealed partial class PatientDialog : ContentDialog
     private void OnPrimary(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         args.Cancel = true; // we close manually after validation
+        ErrorText.Visibility = Visibility.Collapsed;
+        if (!_validation.Validate()) return;
         try
         {
             var name = NameBox.Text.Trim();
-            if (name.Length == 0) throw new InvalidOperationException("Patient name is required.");
-            if (double.IsNaN(AgeBox.Value)) throw new InvalidOperationException("Age is required.");
+            var age = (int)FormValidation.Number(AgeBox);
             var basis = (BasisBox.SelectedItem as ComboBoxItem)?.Tag as string;
-            if (string.IsNullOrEmpty(basis))
-                throw new InvalidOperationException("Lawful basis is required (CON-01).");
 
             var gender = (GenderBox.SelectedItem as ComboBoxItem)?.Content as string ?? "Mr.";
             var codes = _selected.Select(r => r.Code2).ToList();
@@ -77,7 +113,7 @@ public sealed partial class PatientDialog : ContentDialog
             if (_patientId is long id)
             {
                 var p = AppSession.Patients.GetById(id) ?? throw new InvalidOperationException("Patient not found.");
-                p.Name = name; p.Gender = gender; p.Age = (int)AgeBox.Value;
+                p.Name = name; p.Gender = gender; p.Age = age;
                 p.PhoneNumber = PhoneBox.Text.Trim(); p.Address = AddressBox.Text.Trim();
                 p.InitialDiagnosis = DiagnosisBox.Text.Trim();
                 p.IcdCodesJson = JsonSerializer.Serialize(codes);
@@ -96,7 +132,7 @@ public sealed partial class PatientDialog : ContentDialog
                 }
                 var p = new Patient
                 {
-                    RecordNumber = recordNo, Name = name, Gender = gender, Age = (int)AgeBox.Value,
+                    RecordNumber = recordNo, Name = name, Gender = gender, Age = age,
                     PhoneNumber = PhoneBox.Text.Trim(), Address = AddressBox.Text.Trim(),
                     InitialDiagnosis = DiagnosisBox.Text.Trim(),
                     IcdCodesJson = JsonSerializer.Serialize(codes),

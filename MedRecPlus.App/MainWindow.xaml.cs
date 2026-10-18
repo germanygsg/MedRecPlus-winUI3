@@ -27,9 +27,16 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         this.InitializeComponent();
-        Title = "MedRecPlus Offline";
+        Title = "MedRecPlus";
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
+        NavView.PaneOpened += (_, _) => UpdateSidebarToggle();
+        NavView.PaneClosed += (_, _) => UpdateSidebarToggle();
+        ShellRoot.Loaded += (_, _) =>
+        {
+            UpdateMinimumSize();
+            ShellRoot.XamlRoot.Changed += (_, _) => UpdateMinimumSize();
+        };
         AppWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
         AppWindow.TitleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
         // Title-bar / taskbar icon (unpackaged app).
@@ -59,15 +66,36 @@ public sealed partial class MainWindow : Window
         AuthFrame.Visibility = Visibility.Collapsed;
         NavView.Visibility = Visibility.Visible;
         AppTitleBar.IsBackButtonVisible = true;
-        AppTitleBar.IsPaneToggleButtonVisible = true;
+        SidebarToggleButton.Visibility = Visibility.Visible;
+        ShellSearchHost.Visibility = Visibility.Visible;
         ShellSearchBox.Visibility = Visibility.Visible;
         NavigateTo(typeof(DashboardPage));
     }
 
     private void AppTitleBar_BackRequested(TitleBar sender, object args) => GoBack();
 
-    private void AppTitleBar_PaneToggleRequested(TitleBar sender, object args) =>
+    private void AppTitleBar_PaneToggleRequested(TitleBar sender, object args) => ToggleSidebar();
+    private void SidebarToggle_Click(object sender, RoutedEventArgs args) => ToggleSidebar();
+    private void ToggleSidebar()
+    {
         NavView.IsPaneOpen = !NavView.IsPaneOpen;
+        UpdateSidebarToggle();
+    }
+    private void UpdateSidebarToggle()
+    {
+        var label = NavView.IsPaneOpen ? "Collapse sidebar" : "Expand sidebar";
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(SidebarToggleButton, label);
+        ToolTipService.SetToolTip(SidebarToggleButton, label);
+    }
+    private void UpdateMinimumSize()
+    {
+        if (AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+        {
+            var scale = ShellRoot.XamlRoot?.RasterizationScale ?? 1;
+            presenter.PreferredMinimumWidth = (int)Math.Ceiling(640 * scale);
+            presenter.PreferredMinimumHeight = (int)Math.Ceiling(480 * scale);
+        }
+    }
 
     private void GoBack()
     {
@@ -92,13 +120,16 @@ public sealed partial class MainWindow : Window
             return;
 
         ContentFrame.Navigate(pageType, parameter);
-        if (NavView.DisplayMode != NavigationViewDisplayMode.Expanded)
-            NavView.IsPaneOpen = false;
     }
 
     private void ContentFrame_Navigated(object sender, NavigationEventArgs e)
     {
         _currentParameter = e.Parameter;
+        _searchCancellation?.Cancel();
+        ShellSearchBox.Text = e.SourcePageType == typeof(SearchResultsPage)
+            ? (e.Parameter as string ?? "").Trim() : "";
+        ShellSearchBox.ItemsSource = null;
+        ShellSearchBox.IsSuggestionListOpen = false;
         AppTitleBar.IsBackButtonEnabled = ContentFrame.CanGoBack;
         var tag = e.SourcePageType == typeof(PatientDetailPage) ? "Patients"
             : e.SourcePageType == typeof(VisitDetailPage) ? "Appointments"
@@ -183,6 +214,9 @@ public sealed partial class MainWindow : Window
     private void ShellSearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args) =>
         SubmitSearch(sender, args.QueryText, args.ChosenSuggestion as SearchItem);
 
+    private void ShellSearchSubmit_Click(object sender, RoutedEventArgs args) =>
+        SubmitSearch(ShellSearchBox, ShellSearchBox.Text);
+
     private void SubmitSearch(AutoSuggestBox sender, string queryText, SearchItem? destination = null)
     {
         _searchCancellation?.Cancel();
@@ -196,8 +230,11 @@ public sealed partial class MainWindow : Window
         }
         if (destination.Category == null && destination.SectionTag == null && destination.Query == null) return;
 
-        SearchUi.Open(destination);
-        sender.Text = "";
+        if (ContentFrame.Content is SearchResultsPage results && destination.Query == results.Query)
+            results.RefreshSearch();
+        else
+            SearchUi.Open(destination);
+        sender.Text = (ContentFrame.Content as SearchResultsPage)?.Query ?? "";
         sender.ItemsSource = null;
         sender.IsSuggestionListOpen = false;
     }

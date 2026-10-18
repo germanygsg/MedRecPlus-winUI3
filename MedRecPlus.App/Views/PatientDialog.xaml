@@ -6,39 +6,47 @@
     PrimaryButtonText="Save"
     CloseButtonText="Cancel"
     DefaultButton="Primary"
-    Style="{StaticResource AppDialogStyle}">
+    Style="{StaticResource AppDialogStyle}"
+    xmlns:local="using:MedRecPlus.App">
 
     <ContentDialog.Resources>
         <x:Double x:Key="ContentDialogMaxWidth">560</x:Double>
     </ContentDialog.Resources>
 
-    <ScrollViewer MaxHeight="560">
+    <ScrollViewer x:Name="ContentScroller" VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="10" Padding="0,0,12,0">
+            <TextBlock x:Name="ErrorText" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
             <TextBox x:Name="RecordNumberBox" Header="Record number" IsReadOnly="True" />
-            <TextBox x:Name="NameBox" Header="Patient name *" PlaceholderText="Full name" />
-            <Grid ColumnSpacing="8">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                <ComboBox x:Name="GenderBox" Header="Gender *" HorizontalAlignment="Stretch">
-                    <ComboBoxItem Content="Mr." /><ComboBoxItem Content="Ms." /><ComboBoxItem Content="Mx." />
-                </ComboBox>
-                <NumberBox x:Name="AgeBox" Grid.Column="1" Header="Age *" Minimum="0" Maximum="150" />
-            </Grid>
+            <StackPanel Spacing="4">
+                <TextBox x:Name="NameBox" Header="Patient name *" PlaceholderText="Full name" />
+                <TextBlock x:Name="NameBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+            </StackPanel>
+            <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="130">
+
+                <StackPanel Spacing="4">
+                    <ComboBox x:Name="GenderBox" Header="Gender *" HorizontalAlignment="Stretch">
+                        <ComboBoxItem Content="Mr." /><ComboBoxItem Content="Ms." /><ComboBoxItem Content="Mx." />
+                    </ComboBox>
+                    <TextBlock x:Name="GenderBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Spacing="4">
+                    <NumberBox x:Name="AgeBox" Header="Age *" Minimum="0" Maximum="150" />
+                    <TextBlock x:Name="AgeBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                </StackPanel>
+            </local:AdaptiveGrid>
             <TextBox x:Name="PhoneBox" Header="Phone number" InputScope="TelephoneNumber" />
             <TextBox x:Name="AddressBox" Header="Address" />
 
-            <TextBlock Text="ICD-11 diagnosis codes" FontWeight="SemiBold" />
-            <TextBox x:Name="IcdSearchBox" PlaceholderText="Type to search ICD-11 (min 2 chars)…"
-                     TextChanged="IcdSearchBox_TextChanged" />
-            <TextBlock x:Name="IcdSearchStatus" TextWrapping="Wrap" Visibility="Collapsed"
-                       AutomationProperties.LiveSetting="Polite" />
-            <ListView x:Name="IcdResults" MaxHeight="140" IsItemClickEnabled="True"
-                      ItemClick="IcdResult_Click" SelectionMode="None" Visibility="Collapsed">
+            <TextBlock Text="ICD-11 diagnosis codes" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <TextBox x:Name="IcdSearchBox" PlaceholderText="Type to search ICD-11 (min 2 chars)…" TextChanged="IcdSearchBox_TextChanged" />
+            <TextBlock x:Name="IcdSearchStatus" TextWrapping="Wrap" Visibility="Collapsed" AutomationProperties.LiveSetting="Polite" />
+            <ListView x:Name="IcdResults" MaxHeight="140" IsItemClickEnabled="True" ItemClick="IcdResult_Click" SelectionMode="None" Visibility="Collapsed">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="{Binding Code}" FontWeight="SemiBold" Width="90" />
+                        <local:WrapPanel Spacing="8">
+                            <TextBlock Text="{Binding Code}" FontWeight="SemiBold" Width="90" TextWrapping="Wrap" />
                             <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
-                        </StackPanel>
+                        </local:WrapPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -54,17 +62,17 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <TextBox x:Name="DiagnosisBox" Header="Initial diagnosis" AcceptsReturn="True"
-                     TextWrapping="Wrap" MinHeight="64" />
-            <ComboBox x:Name="BasisBox" Header="Lawful basis *" HorizontalAlignment="Stretch"
-                      PlaceholderText="Select lawful basis (required)">
-                <ComboBoxItem Content="Explicit consent" Tag="explicit_consent" />
-                <ComboBoxItem Content="Contract" Tag="contract" />
-                <ComboBoxItem Content="Legal obligation" Tag="legal_obligation" />
-                <ComboBoxItem Content="Vital interests" Tag="vital_interests" />
-                <ComboBoxItem Content="Public health" Tag="public_health" />
-            </ComboBox>
-            <TextBlock x:Name="ErrorText" Foreground="Red" TextWrapping="Wrap" Visibility="Collapsed" />
+            <TextBox x:Name="DiagnosisBox" Header="Initial diagnosis" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64" />
+            <StackPanel Spacing="4">
+                <ComboBox x:Name="BasisBox" Header="Lawful basis *" HorizontalAlignment="Stretch" PlaceholderText="Select lawful basis (required)">
+                    <ComboBoxItem Content="Explicit consent" Tag="explicit_consent" />
+                    <ComboBoxItem Content="Contract" Tag="contract" />
+                    <ComboBoxItem Content="Legal obligation" Tag="legal_obligation" />
+                    <ComboBoxItem Content="Vital interests" Tag="vital_interests" />
+                    <ComboBoxItem Content="Public health" Tag="public_health" />
+                </ComboBox>
+                <TextBlock x:Name="BasisBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </ContentDialog>

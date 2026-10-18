@@ -12,6 +12,7 @@ public sealed partial class SearchResultsPage : Page
     private readonly ObservableCollection<ResultGroup> _groups = [];
     private CancellationTokenSource? _cancellation;
     private string _query = "";
+    internal string Query => _query;
 
     public sealed record ResultGroup(string Name, int Total, IReadOnlyList<SearchItem> Items,
         SearchCategory? Category = null)
@@ -30,7 +31,7 @@ public sealed partial class SearchResultsPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        ResultsSearchBox.Text = e.Parameter as string ?? "";
+        _query = (e.Parameter as string ?? "").Trim();
         _ = SearchAsync();
     }
 
@@ -46,7 +47,6 @@ public sealed partial class SearchResultsPage : Page
         using var cancellation = new CancellationTokenSource();
         _cancellation = cancellation;
         var token = cancellation.Token;
-        _query = ResultsSearchBox.Text.Trim();
         var query = _query;
         _groups.Clear();
         RetryButton.Visibility = Visibility.Collapsed;
@@ -99,14 +99,7 @@ public sealed partial class SearchResultsPage : Page
         SearchProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private async void ResultsSearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
-    {
-        var query = sender.Text.Trim();
-        if (query != _query)
-            App.Shell?.NavigateTo(typeof(SearchResultsPage), query);
-        else
-            await SearchAsync();
-    }
+    internal void RefreshSearch() => _ = SearchAsync();
 
     private async void Retry_Click(object sender, RoutedEventArgs e) => await SearchAsync();
 

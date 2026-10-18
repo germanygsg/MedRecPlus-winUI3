@@ -6,21 +6,25 @@ namespace MedRecPlus.App.Views;
 
 public sealed partial class TreatmentDialog : ContentDialog
 {
+    private readonly FormValidation _validation = new();
     public TreatmentDialog()
     {
         InitializeComponent();
+        _validation.Add(NameBox, NameBoxError, () => FormValidation.Required(NameBox.Text, "Treatment name"));
+        _validation.Add(PriceBox, PriceBoxError, () => RupiahAmount.TryParseCents(PriceBox.Text, out _) ? null
+            : "Enter a whole-rupiah price of at least Rp 1 (e.g. 300000).");
         PrimaryButtonClick += OnPrimary;
     }
 
     private void OnPrimary(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         args.Cancel = true;
+        ErrorText.Visibility = Visibility.Collapsed;
+        if (!_validation.Validate()) return;
         try
         {
             var name = NameBox.Text.Trim();
-            if (name.Length == 0) throw new InvalidOperationException("Name is required.");
-            if (!RupiahAmount.TryParseCents(PriceBox.Text, out var priceCents))
-                throw new InvalidOperationException("Enter a whole-rupiah price of at least Rp 1 (e.g. 300000).");
+            RupiahAmount.TryParseCents(PriceBox.Text, out var priceCents);
             AppSession.Treatments.Create(name, DescBox.Text.Trim(),
                 priceCents, null);
             Tag = "saved";

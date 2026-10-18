@@ -75,7 +75,7 @@ public sealed partial class AppointmentsPage : Page
     {
         var (from, to) = Range();
         Rows.Clear();
-        foreach (var v in AppSession.Appointments.List(from, to, SearchBox.Text.Trim(), 200))
+        foreach (var v in AppSession.Appointments.List(from, to, "", 200))
         {
             var inv = AppSession.InvoiceRecords.GetByAppointmentId(v.Id);
             Rows.Add(new VisitRow
@@ -91,12 +91,6 @@ public sealed partial class AppointmentsPage : Page
     }
 
     private void RangeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (!_loaded) return;
-        Refresh();
-    }
-
-    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (!_loaded) return;
         Refresh();

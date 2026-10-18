@@ -8,6 +8,9 @@ namespace MedRecPlus.App.Views;
 
 public sealed partial class SettingsPage : Page
 {
+    private readonly FormValidation _clinicValidation = new();
+    private readonly FormValidation _taxValidation = new();
+    private readonly FormValidation _passwordValidation = new();
     public ObservableCollection<OpRow> Ops { get; } = new();
     public ObservableCollection<TrRow> Treatments { get; } = new();
     public ObservableCollection<ExamRow> Exams { get; } = new();
@@ -16,6 +19,16 @@ public sealed partial class SettingsPage : Page
     public SettingsPage()
     {
         InitializeComponent();
+        _clinicValidation.Add(ClinicNameBox, ClinicNameBoxError, () => FormValidation.Required(ClinicNameBox.Text, "Clinic name"));
+        _taxValidation.Add(TaxValueBox, TaxValueBoxError, () => TaxTypeBox.SelectedIndex > 0 &&
+            (!double.IsFinite(FormValidation.Number(TaxValueBox)) || FormValidation.Number(TaxValueBox) < 0)
+                ? "Enter a tax value of 0 or more." : null);
+        TaxTypeBox.SelectionChanged += (_, _) => _taxValidation.Recheck(TaxValueBox);
+        _passwordValidation.Add(CurrentPwBox, CurrentPwBoxError, () => string.IsNullOrEmpty(CurrentPwBox.Password) ? "Current password is required." : null);
+        _passwordValidation.Add(NewPwBox, NewPwBoxError, () => FormValidation.Password(NewPwBox.Password));
+        _passwordValidation.Add(ConfirmPwBox, ConfirmPwBoxError, () => string.IsNullOrEmpty(ConfirmPwBox.Password) ? "Confirm your new password."
+            : ConfirmPwBox.Password != NewPwBox.Password ? "New passwords do not match." : null);
+        NewPwBox.PasswordChanged += (_, _) => _passwordValidation.Recheck(ConfirmPwBox);
         OperatorList.ItemsSource = Ops;
         TreatmentList.ItemsSource = Treatments;
         ExamList.ItemsSource = Exams;
@@ -67,12 +80,13 @@ public sealed partial class SettingsPage : Page
         foreach (var b in AppSession.Backups.ListBackups())
             Backups.Add(new BackupRow { Path = b, Name = Path.GetFileName(b) });
 
-        AboutText.Text = $"MedRecPlus Offline · ICD-11 database: {(AppSession.Icd.IsAvailable ? "bundled" : "not available")} · " +
+        AboutText.Text = $"MedRecPlus · ICD-11 database: {(AppSession.Icd.IsAvailable ? "bundled" : "not available")} · " +
                          $"Data: {AppData.BaseDir}";
     }
 
     private void SaveClinic_Click(object sender, RoutedEventArgs e)
     {
+        if (!_clinicValidation.Validate()) return;
         var clinic = AppSession.Settings.GetOrDefault(SettingKeys.ClinicProfile, new ClinicProfile());
         clinic.Name = ClinicNameBox.Text.Trim();
         clinic.HeaderText = HeaderBox.Text;
@@ -83,24 +97,31 @@ public sealed partial class SettingsPage : Page
 
     private void SaveTax_Click(object sender, RoutedEventArgs e)
     {
+        if (!_taxValidation.Validate()) return;
         var cur = AppSession.Settings.GetOrDefault(SettingKeys.Currency, new CurrencyConfig());
         cur.TaxLabel = TaxLabelBox.Text.Trim();
         cur.TaxType = (TaxTypeBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "none";
-        cur.TaxValue = (decimal)TaxValueBox.Value;
+        var taxValue = FormValidation.Number(TaxValueBox);
+        cur.TaxValue = double.IsFinite(taxValue) ? (decimal)taxValue : 0;
         AppSession.Settings.Set(SettingKeys.Currency, cur);
         Dialogs.Alert(XamlRoot, "Saved", "Tax settings saved. New invoices will use these.");
     }
 
     private async void AddOperator_Click(object sender, RoutedEventArgs e)
     {
-        var nameBox = new TextBox { Header = "Name", PlaceholderText = "e.g. Dr. Maya" };
+        var nameBox = new TextBox { Header = "Name *", PlaceholderText = "e.g. Dr. Maya" };
         var roleBox = new TextBox { Header = "Role", PlaceholderText = "e.g. Doctor" };
+        var nameError = FormValidation.CreateMessage();
         var dlg = new ContentDialog
         {
             Title = "Add operator",
-            Content = new StackPanel { Spacing = 8, Children = { nameBox, roleBox } },
+            Content = new StackPanel { Spacing = 8, Children = {
+                new StackPanel { Spacing = 4, Children = { nameBox, nameError } }, roleBox } },
             PrimaryButtonText = "Add", CloseButtonText = "Cancel", XamlRoot = XamlRoot,
         };
+        var validation = new FormValidation();
+        validation.Add(nameBox, nameError, () => FormValidation.Required(nameBox.Text, "Operator name"));
+        dlg.PrimaryButtonClick += (_, args) => args.Cancel = !validation.Validate();
         if (await dlg.ShowAsync() == ContentDialogResult.Primary && nameBox.Text.Trim().Length > 0)
         {
             AppSession.Operators.Create(nameBox.Text.Trim(), roleBox.Text.Trim());
@@ -137,14 +158,19 @@ public sealed partial class SettingsPage : Page
 
     private async void AddExam_Click(object sender, RoutedEventArgs e)
     {
-        var nameBox = new TextBox { Header = "Name", PlaceholderText = "e.g. Oxygen saturation" };
+        var nameBox = new TextBox { Header = "Name *", PlaceholderText = "e.g. Oxygen saturation" };
         var unitBox = new TextBox { Header = "Unit", PlaceholderText = "e.g. %" };
+        var nameError = FormValidation.CreateMessage();
         var dlg = new ContentDialog
         {
             Title = "Add examination",
-            Content = new StackPanel { Spacing = 8, Children = { nameBox, unitBox } },
+            Content = new StackPanel { Spacing = 8, Children = {
+                new StackPanel { Spacing = 4, Children = { nameBox, nameError } }, unitBox } },
             PrimaryButtonText = "Add", CloseButtonText = "Cancel", XamlRoot = XamlRoot,
         };
+        var validation = new FormValidation();
+        validation.Add(nameBox, nameError, () => FormValidation.Required(nameBox.Text, "Examination name"));
+        dlg.PrimaryButtonClick += (_, args) => args.Cancel = !validation.Validate();
         if (await dlg.ShowAsync() == ContentDialogResult.Primary && nameBox.Text.Trim().Length > 0)
         {
             AppSession.CustomExams.Create(nameBox.Text.Trim(), unitBox.Text.Trim());
@@ -190,14 +216,18 @@ public sealed partial class SettingsPage : Page
     private void ChangePw_Click(object sender, RoutedEventArgs e)
     {
         PwError.Visibility = Visibility.Collapsed;
+        if (!_passwordValidation.Validate()) return;
         try
         {
-            if (NewPwBox.Password != ConfirmPwBox.Password)
-                throw new InvalidOperationException("New passwords do not match.");
             var newDb = AppData.ChangePassword(AppSession.Db, CurrentPwBox.Password, NewPwBox.Password);
             AppSession.Rekey(newDb);
+            _passwordValidation.Reset();
             CurrentPwBox.Password = NewPwBox.Password = ConfirmPwBox.Password = "";
             Dialogs.Alert(XamlRoot, "Done", "Password changed. The database was re-encrypted.");
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "Current password is incorrect.")
+        {
+            _passwordValidation.Show(CurrentPwBox, ex.Message);
         }
         catch (Exception ex)
         {

@@ -1,15 +1,76 @@
 <Application
     x:Class="MedRecPlus.App.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <!-- Other merged dictionaries here -->
+                <controls:XamlControlsResources>
+                    <!-- The WinUI default caps the dialog card at 756px; let dialogs grow with the window. -->
+                    <controls:XamlControlsResources.MergedDictionaries>
+                        <ResourceDictionary>
+                            <x:Double x:Key="ContentDialogMaxHeight">10000</x:Double>
+                        </ResourceDictionary>
+                    </controls:XamlControlsResources.MergedDictionaries>
+                </controls:XamlControlsResources>
             </ResourceDictionary.MergedDictionaries>
+            <!-- Bundle Inter so every clinic PC uses the same typography offline. -->
+            <FontFamily x:Key="AppFontFamily">ms-appx:///Assets/Fonts/InterVariable.ttf#Inter Variable</FontFamily>
+            <FontFamily x:Key="ContentControlThemeFontFamily">ms-appx:///Assets/Fonts/InterVariable.ttf#Inter Variable</FontFamily>
+            <!-- The title bar uses this named style rather than the implicit text style. -->
+            <Style x:Key="CaptionTextBlockStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
+                <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
+                <Setter Property="FontSize" Value="{StaticResource CaptionTextBlockFontSize}" />
+                <Setter Property="FontWeight" Value="Normal" />
+            </Style>
+            <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+            <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            </Style>
+            <Style TargetType="RichTextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
+            </Style>
+            <Style TargetType="NumberBox">
+                <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
+            </Style>
+            <DataTemplate x:Key="EditButtonContentTemplate">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE70F;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                    <TextBlock Text="{Binding}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="DeleteButtonContentTemplate">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE74D;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="14" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                    <TextBlock Text="{Binding}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                </StackPanel>
+            </DataTemplate>
+            <Style x:Key="DeleteConfirmationButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+                <Setter Property="ContentTemplate" Value="{StaticResource DeleteButtonContentTemplate}" />
+            </Style>
+            <Style x:Key="FieldErrorStyle" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Setter Property="AutomationProperties.LiveSetting" Value="Polite" />
+            </Style>
+            <!-- Calendar day and month labels have their own font properties. -->
+            <Style TargetType="CalendarView" BasedOn="{StaticResource DefaultCalendarViewStyle}">
+                <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
+                <Setter Property="DayItemFontFamily" Value="{StaticResource AppFontFamily}" />
+                <Setter Property="FirstOfMonthLabelFontFamily" Value="{StaticResource AppFontFamily}" />
+                <Setter Property="MonthYearItemFontFamily" Value="{StaticResource AppFontFamily}" />
+                <Setter Property="FirstOfYearDecadeLabelFontFamily" Value="{StaticResource AppFontFamily}" />
+            </Style>
             <!-- The dialog layer must fill the window; only its inner card is width-limited. -->
             <Style x:Key="AppDialogStyle" TargetType="ContentDialog" BasedOn="{StaticResource DefaultContentDialogStyle}">
+                <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
                 <Setter Property="HorizontalAlignment" Value="Stretch" />
                 <Setter Property="VerticalAlignment" Value="Stretch" />
             </Style>

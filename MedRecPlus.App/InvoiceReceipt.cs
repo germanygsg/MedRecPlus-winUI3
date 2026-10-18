@@ -91,7 +91,7 @@ internal sealed record InvoiceReceipt(
     internal static TextBlock Text(string value, double size = 14, bool bold = false) => new()
     {
         Text = value,
-        FontFamily = new FontFamily("Arial"),
+        FontFamily = (FontFamily)Application.Current.Resources["AppFontFamily"],
         FontSize = size,
         FontWeight = bold ? FontWeights.Bold : FontWeights.Normal,
         Foreground = new SolidColorBrush(Microsoft.UI.Colors.Black),

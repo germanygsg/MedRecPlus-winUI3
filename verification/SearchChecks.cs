@@ -67,6 +67,14 @@ public sealed partial class MainWindow
             }
             EnterShell();
             AppWindow.Resize(new Windows.Graphics.SizeInt32(1100, 900));
+            foreach (var pageType in new[] { typeof(PatientsPage), typeof(AppointmentsPage), typeof(InvoicesPage) })
+            {
+                NavigateTo(pageType);
+                await Task.Delay(150);
+                CheckSearch(((Page)ContentFrame.Content).FindName("SearchBox") == null
+                    && ShellSearchBox.Visibility == Visibility.Visible,
+                    $"{pageType.Name} uses only the persistent title-bar search");
+            }
             await Task.Delay(200);
             ShellSearchBox.Focus(FocusState.Programmatic);
             TypeSearch("John");
@@ -102,8 +110,9 @@ public sealed partial class MainWindow
             SubmitSearch(ShellSearchBox, "John");
             await WaitForSearch(() => ContentFrame.Content is SearchResultsPage page && SearchTexts(page).Any(text => text.Text == "55 results for “John”"));
             var results = (SearchResultsPage)ContentFrame.Content;
-            CheckSearch(((AutoSuggestBox)results.FindName("ResultsSearchBox")).ActualWidth >= 280,
-                "full results search field has a usable width");
+            CheckSearch(results.FindName("ResultsSearchBox") == null && ShellSearchBox.Text == "John"
+                && ShellSearchBox.ActualWidth >= 120,
+                "full results use the persistent title-bar search and retain the current query");
             var groups = (ObservableCollection<SearchResultsPage.ResultGroup>)((ItemsControl)results.FindName("ResultGroups")).ItemsSource;
             CheckSearch(groups.Count == 3 && groups[1].Items.Count == 25 && groups[1].MoreVisibility == Visibility.Visible,
                 "Enter opens grouped full results with load-more controls");
@@ -117,12 +126,16 @@ public sealed partial class MainWindow
                 && SearchTexts(results).Any(text => text.Text == "Invoices (27)"), "full results render visible category headings");
             await SaveSearchVisual(ShellRoot, "search-results.png");
 
-            var resultsBox = (AutoSuggestBox)results.FindName("ResultsSearchBox");
-            resultsBox.Text = "Jane";
-            typeof(SearchResultsPage).GetMethod("ResultsSearchBox_QuerySubmitted", BindingFlags.Instance | BindingFlags.NonPublic)!
-                .Invoke(results, [resultsBox, new AutoSuggestBoxQuerySubmittedEventArgs()]);
-            await WaitForSearch(() => Equals(_currentParameter, "Jane"));
-            CheckSearch(Equals(_currentParameter, "Jane"), "refining a search keeps the navigation query in sync");
+            TypeSearch("Jane");
+            SubmitSearch(ShellSearchBox, "Jane");
+            await WaitForSearch(() => ContentFrame.Content is SearchResultsPage page
+                && SearchTexts(page).Any(text => text.Text == "1 result for “Jane”"));
+            CheckSearch(Equals(_currentParameter, "Jane") && ShellSearchBox.Text == "Jane",
+                "refining through the title bar updates full results and retains the navigation query");
+            GoBack();
+            await WaitForSearch(() => ContentFrame.Content is SearchResultsPage page
+                && SearchTexts(page).Any(text => text.Text == "55 results for “John”"));
+            CheckSearch(ShellSearchBox.Text == "John", "Back restores the full-results query in the title bar");
             TypeSearch("John");
             TypeSearch("Jane");
             await WaitForSearch(() => Suggestions.Any(item => item.Query == "Jane"));
@@ -132,8 +145,8 @@ public sealed partial class MainWindow
             TypeSearch("John");
             SubmitSearch(ShellSearchBox, "John");
             await Task.Delay(500);
-            CheckSearch(ShellSearchBox.Text == "" && ShellSearchBox.ItemsSource == null && !ShellSearchBox.IsSuggestionListOpen,
-                $"submitting during debounce leaves the dropdown closed and cleared (text='{ShellSearchBox.Text}', items={Suggestions.Length}, open={ShellSearchBox.IsSuggestionListOpen})");
+            CheckSearch(ShellSearchBox.Text == "John" && ShellSearchBox.ItemsSource == null && !ShellSearchBox.IsSuggestionListOpen,
+                $"resubmitting during debounce retains the results query and closes suggestions (text='{ShellSearchBox.Text}', items={Suggestions.Length}, open={ShellSearchBox.IsSuggestionListOpen})");
             TypeSearch("no-such-person");
             await WaitForSearch(() => Suggestions.Any(item => item.Title == "No matches found"));
             CheckSearch(Suggestions.Single().Title == "No matches found", "native search displays an explicit no-match state");

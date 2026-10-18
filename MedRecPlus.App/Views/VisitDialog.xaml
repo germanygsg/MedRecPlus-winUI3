@@ -6,25 +6,28 @@
     PrimaryButtonText="Create visit"
     CloseButtonText="Cancel"
     DefaultButton="Primary"
-    Style="{StaticResource AppDialogStyle}">
+    Style="{StaticResource AppDialogStyle}"
+    xmlns:local="using:MedRecPlus.App">
 
     <ContentDialog.Resources>
         <x:Double x:Key="ContentDialogMaxWidth">620</x:Double>
     </ContentDialog.Resources>
 
-    <ScrollViewer MaxHeight="600">
+    <ScrollViewer x:Name="ContentScroller" VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="10" Padding="0,0,12,0">
-            <TextBlock Text="Patient *" FontWeight="SemiBold" />
-            <TextBox x:Name="PatientSearchBox" PlaceholderText="Search patient by name or record number…"
-                     TextChanged="PatientSearchBox_TextChanged" />
-            <ListView x:Name="PatientResults" MaxHeight="130" IsItemClickEnabled="True"
-                      ItemClick="PatientResult_Click" SelectionMode="None" Visibility="Collapsed">
+            <TextBlock Text="Patient *" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <TextBlock x:Name="ErrorText" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+            <StackPanel Spacing="4">
+                <TextBox x:Name="PatientSearchBox" PlaceholderText="Search patient by name or record number…" TextChanged="PatientSearchBox_TextChanged" />
+                <TextBlock x:Name="PatientSearchBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+            </StackPanel>
+            <ListView x:Name="PatientResults" MaxHeight="130" IsItemClickEnabled="True" ItemClick="PatientResult_Click" SelectionMode="None" Visibility="Collapsed">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="{Binding RecordNumber}" FontWeight="SemiBold" Width="120" />
-                            <TextBlock Text="{Binding Name}" />
-                        </StackPanel>
+                        <local:WrapPanel Spacing="8">
+                            <TextBlock Text="{Binding RecordNumber}" FontWeight="SemiBold" Width="120" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+                        </local:WrapPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -33,98 +36,95 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="PatientSelectedText" FontWeight="SemiBold"
-                           TextWrapping="Wrap" VerticalAlignment="Center" />
-                <Button Grid.Column="1" Click="ClearPatient_Click"
-                        Style="{StaticResource SubtleButtonStyle}"
-                        ToolTipService.ToolTip="Clear selected patient"
-                        AutomationProperties.Name="Clear selected patient">
+                <TextBlock x:Name="PatientSelectedText" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Click="ClearPatient_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Clear selected patient" AutomationProperties.Name="Clear selected patient">
                     <SymbolIcon Symbol="Clear" />
                 </Button>
             </Grid>
 
-            <ComboBox x:Name="OperatorBox" Header="Operator *" HorizontalAlignment="Stretch" />
+            <StackPanel Spacing="4">
+                <ComboBox x:Name="OperatorBox" Header="Operator *" HorizontalAlignment="Stretch" />
+                <TextBlock x:Name="OperatorBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+            </StackPanel>
 
-            <TextBlock Text="ICD-11 diagnosis codes" FontWeight="SemiBold" />
-            <TextBox x:Name="IcdSearchBox" PlaceholderText="Type to search ICD-11 (min 2 chars)…"
-                     TextChanged="IcdSearchBox_TextChanged" />
-            <TextBlock x:Name="IcdSearchStatus" TextWrapping="Wrap" Visibility="Collapsed"
-                       AutomationProperties.LiveSetting="Polite" />
-            <ListView x:Name="IcdResults" MaxHeight="120" IsItemClickEnabled="True"
-                      ItemClick="IcdResult_Click" SelectionMode="None" Visibility="Collapsed">
+            <TextBlock Text="ICD-11 diagnosis codes" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <TextBox x:Name="IcdSearchBox" PlaceholderText="Type to search ICD-11 (min 2 chars)…" TextChanged="IcdSearchBox_TextChanged" />
+            <TextBlock x:Name="IcdSearchStatus" TextWrapping="Wrap" Visibility="Collapsed" AutomationProperties.LiveSetting="Polite" />
+            <ListView x:Name="IcdResults" MaxHeight="120" IsItemClickEnabled="True" ItemClick="IcdResult_Click" SelectionMode="None" Visibility="Collapsed">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="{Binding Code}" FontWeight="SemiBold" Width="90" />
+                        <local:WrapPanel Spacing="8">
+                            <TextBlock Text="{Binding Code}" FontWeight="SemiBold" Width="90" TextWrapping="Wrap" />
                             <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
-                        </StackPanel>
+                        </local:WrapPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
             <ItemsControl x:Name="IcdChips">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="{Binding Display}" VerticalAlignment="Center" />
+                        <local:WrapPanel Spacing="6">
+                            <TextBlock Text="{Binding Display}" VerticalAlignment="Center" TextWrapping="Wrap" />
                             <Button Content="✕" Click="IcdRemove_Click" Tag="{Binding Code}" />
-                        </StackPanel>
+                        </local:WrapPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <TextBlock Text="Vital signs" FontWeight="SemiBold" />
-            <Grid ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+            <TextBlock Text="Vital signs" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <local:AdaptiveGrid ColumnSpacing="8" Columns="4" MinimumColumnWidth="110">
+
                 <TextBox x:Name="BpBox" Header="Blood pressure" PlaceholderText="120/80" />
-                <NumberBox x:Name="RespBox" Grid.Column="1" Header="Resp./min" Minimum="0" />
-                <NumberBox x:Name="HrBox" Grid.Column="2" Header="Heart bpm" Minimum="0" />
-                <NumberBox x:Name="BorgBox" Grid.Column="3" Header="Borg 0–10" Minimum="0" Maximum="10" />
-            </Grid>
+                <NumberBox x:Name="RespBox" Header="Resp./min" Minimum="0" />
+                <NumberBox x:Name="HrBox" Header="Heart bpm" Minimum="0" />
+                <NumberBox x:Name="BorgBox" Header="Borg 0–10" Minimum="0" Maximum="10" />
+            </local:AdaptiveGrid>
             <StackPanel x:Name="CustomExamsPanel" Spacing="6" />
 
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Treatments" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <local:WrapPanel Spacing="8">
+                <TextBlock Text="Treatments" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
                 <Button Content="New treatment" Click="NewTreatmentToggle_Click" />
-            </StackPanel>
+            </local:WrapPanel>
             <Border x:Name="NewTreatmentForm" Visibility="Collapsed" Style="{StaticResource CardBorder}" Padding="12">
                 <StackPanel Spacing="8">
-                    <TextBox x:Name="NewTreatNameBox" Header="Treatment name *" PlaceholderText="e.g. Consultation" />
-                    <TextBox x:Name="NewTreatPriceBox" Header="Price (Rp) *" PlaceholderText="e.g. 150000" InputScope="Number" />
-                    <TextBlock x:Name="NewTreatError" Foreground="Red" TextWrapping="Wrap" Visibility="Collapsed" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
+                    <StackPanel Spacing="4">
+                        <TextBox x:Name="NewTreatNameBox" Header="Treatment name *" PlaceholderText="e.g. Consultation" />
+                        <TextBlock x:Name="NewTreatNameBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <TextBox x:Name="NewTreatPriceBox" Header="Price (Rp) *" PlaceholderText="e.g. 150000" InputScope="Number" />
+                        <TextBlock x:Name="NewTreatPriceBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <local:WrapPanel Spacing="8">
                         <Button Content="Save treatment" Click="NewTreatmentSave_Click" Style="{StaticResource AccentButtonStyle}" />
                         <Button Content="Cancel" Click="NewTreatmentToggle_Click" />
-                    </StackPanel>
+                    </local:WrapPanel>
                 </StackPanel>
             </Border>
             <ListView x:Name="TreatmentList" SelectionMode="Multiple" MaxHeight="170">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <Grid ColumnSpacing="8">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
+
                             <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                            <TextBlock Grid.Column="1" Text="{Binding Price}" VerticalAlignment="Center" />
-                        </Grid>
+                            <TextBlock Text="{Binding Price}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                        </local:AdaptiveGrid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-            <TextBlock x:Name="TotalText" FontWeight="SemiBold" />
+            <TextBlock x:Name="TotalText" FontWeight="SemiBold" TextWrapping="Wrap" />
 
-            <Grid ColumnSpacing="8">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
+
                 <ComboBox x:Name="DiscountTypeBox" Header="Discount type" HorizontalAlignment="Stretch" SelectedIndex="0">
                     <ComboBoxItem Content="None" Tag="none" />
                     <ComboBoxItem Content="Percent %" Tag="percent" />
                     <ComboBoxItem Content="Fixed (Rp)" Tag="fixed" />
                 </ComboBox>
-                <NumberBox x:Name="DiscountValueBox" Grid.Column="1" Header="Discount value" Minimum="0" />
-            </Grid>
+                <NumberBox x:Name="DiscountValueBox" Header="Discount value" Minimum="0" />
+            </local:AdaptiveGrid>
 
             <TextBox x:Name="NotesBox" Header="Notes" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
-            <TextBlock x:Name="ErrorText" Foreground="Red" TextWrapping="Wrap" Visibility="Collapsed" />
         </StackPanel>
     </ScrollViewer>
 </ContentDialog>

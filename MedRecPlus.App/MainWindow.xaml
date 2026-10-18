@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
 
         <TitleBar x:Name="AppTitleBar"
-                  Title="MedRecPlus Offline"
+                  Title="MedRecPlus"
                   IsBackButtonVisible="False"
                   IsPaneToggleButtonVisible="False"
                   BackRequested="AppTitleBar_BackRequested"
@@ -25,32 +25,65 @@
             <TitleBar.Resources>
                 <HorizontalAlignment x:Key="TitleBarContentHorizontalAlignment">Stretch</HorizontalAlignment>
             </TitleBar.Resources>
+            <TitleBar.LeftHeader>
+                <Button x:Name="SidebarToggleButton" Visibility="Collapsed"
+                        Width="40" Height="40" Padding="8" Click="SidebarToggle_Click"
+                        Style="{StaticResource SubtleButtonStyle}"
+                        AutomationProperties.Name="Collapse sidebar" ToolTipService.ToolTip="Collapse sidebar">
+                    <Image Source="ms-appx:///Assets/AppIcon.png" Width="24" Height="24" />
+                </Button>
+            </TitleBar.LeftHeader>
             <TitleBar.Content>
-                <AutoSuggestBox x:Name="ShellSearchBox"
-                                Visibility="Collapsed"
-                                MinWidth="120" MaxWidth="516"
-                                HorizontalAlignment="Stretch"
-                                PlaceholderText="Search records and sections"
-                                AutomationProperties.Name="Search patients, appointments, invoices, and sections"
-                                TextMemberPath="Title"
-                                QueryIcon="Find"
-                                TextChanged="ShellSearchBox_TextChanged"
-                                QuerySubmitted="ShellSearchBox_QuerySubmitted">
-                    <AutoSuggestBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Spacing="4" Padding="0,4" HorizontalAlignment="Stretch">
-                                <TextBlock Text="{Binding Heading}" Visibility="{Binding HeadingVisibility}"
-                                           FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                                           Margin="0,4,0,4" AutomationProperties.HeadingLevel="Level2" />
-                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Text="{Binding Detail}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </AutoSuggestBox.ItemTemplate>
-                    <AutoSuggestBox.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="SearchAccelerator_Invoked" />
-                    </AutoSuggestBox.KeyboardAccelerators>
-                </AutoSuggestBox>
+                <Grid x:Name="ShellSearchHost" Visibility="Collapsed"
+                      MinWidth="120" MaxWidth="516" HorizontalAlignment="Stretch">
+                    <AutoSuggestBox x:Name="ShellSearchBox"
+                                    Visibility="Collapsed"
+                                    MinWidth="120" MaxWidth="516"
+                                    Height="32" CornerRadius="16" BorderThickness="1"
+                                    Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                                    VerticalContentAlignment="Center"
+                                    HorizontalAlignment="Stretch"
+                                    PlaceholderText="Search records and sections"
+                                    AutomationProperties.Name="Search patients, appointments, invoices, and sections"
+                                    TextMemberPath="Title"
+                                    TextChanged="ShellSearchBox_TextChanged"
+                                    QuerySubmitted="ShellSearchBox_QuerySubmitted">
+                        <AutoSuggestBox.Resources>
+                            <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="ControlFillColorTertiaryBrush" />
+                            <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="ControlFillColorInputActiveBrush" />
+                            <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="ControlStrokeColorDefaultBrush" />
+                            <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="ControlStrokeColorDefaultBrush" />
+                            <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
+                        </AutoSuggestBox.Resources>
+                        <AutoSuggestBox.TextBoxStyle>
+                            <Style TargetType="TextBox" BasedOn="{StaticResource AutoSuggestBoxTextBoxStyle}">
+                                <Setter Property="Padding" Value="36,4,12,4" />
+                            </Style>
+                        </AutoSuggestBox.TextBoxStyle>
+                        <AutoSuggestBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Spacing="4" Padding="0,4" HorizontalAlignment="Stretch">
+                                    <TextBlock Text="{Binding Heading}" Visibility="{Binding HeadingVisibility}"
+                                               FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                               Margin="0,4,0,4" AutomationProperties.HeadingLevel="Level2" />
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Detail}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </AutoSuggestBox.ItemTemplate>
+                        <AutoSuggestBox.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="SearchAccelerator_Invoked" />
+                        </AutoSuggestBox.KeyboardAccelerators>
+                    </AutoSuggestBox>
+                    <Button Width="32" Height="32" Margin="4,0,0,0" Padding="0"
+                            HorizontalAlignment="Left" VerticalAlignment="Center" CornerRadius="16"
+                            Style="{StaticResource SubtleButtonStyle}" IsTabStop="False"
+                            Click="ShellSearchSubmit_Click" AutomationProperties.Name="Search"
+                            ToolTipService.ToolTip="Search">
+                        <FontIcon Glyph="&#xE721;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" />
+                    </Button>
+                </Grid>
             </TitleBar.Content>
         </TitleBar>
 
@@ -65,12 +98,12 @@
                         IsPaneToggleButtonVisible="False"
                         IsTitleBarAutoPaddingEnabled="False"
                         AlwaysShowHeader="True"
-                        OpenPaneLength="300"
-                        PaneDisplayMode="Auto"
+                        OpenPaneLength="240"
+                        PaneDisplayMode="Left"
+                        IsPaneOpen="True"
                         SelectionChanged="NavView_SelectionChanged">
             <NavigationView.Resources>
                 <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
-                <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="Transparent" />
                 <Thickness x:Key="NavigationViewHeaderMargin">0</Thickness>
                 <Thickness x:Key="NavigationViewMinimalHeaderMargin">0</Thickness>
                 <Thickness x:Key="NavigationViewContentGridBorderThickness">0</Thickness>
@@ -99,7 +132,7 @@
                     <NavigationViewItem.Icon><SymbolIcon Symbol="Document" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem Content="Reports" Tag="Reports">
-                    <NavigationViewItem.Icon><SymbolIcon Symbol="Page" /></NavigationViewItem.Icon>
+                    <NavigationViewItem.Icon><SymbolIcon Symbol="ShowResults" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem Content="AI Insights" Tag="AiInsights">
                     <NavigationViewItem.Icon><SymbolIcon Symbol="Comment" /></NavigationViewItem.Icon>

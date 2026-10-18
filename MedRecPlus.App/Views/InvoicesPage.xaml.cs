@@ -21,7 +21,7 @@ public sealed partial class InvoicesPage : Page
         var status = (StatusBox.SelectedItem as ComboBoxItem)?.Tag as string;
         if (string.IsNullOrEmpty(status)) status = null;
         Rows.Clear();
-        foreach (var inv in AppSession.InvoiceRecords.List(SearchBox.Text.Trim(), status, null, null, 200))
+        foreach (var inv in AppSession.InvoiceRecords.List("", status, null, null, 200))
             Rows.Add(new InvoiceRow
             {
                 Id = inv.Id,

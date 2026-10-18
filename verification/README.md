@@ -1,5 +1,26 @@
 # Native app checks
 
+## Sidebar resizing
+
+Run `./verification/Build-NavigationChecks.ps1` from `src` on Windows. It uses
+a temporary app and long sample values to check every page at minimum (640),
+medium (900) and wide (1280) window widths, with the sidebar open and closed.
+Checks require an inline sidebar, preserved sidebar state, content within page
+bounds, and responsive rows without overlapping cells. They also verify light/dark
+mode, the app-icon toggle, and MedRecPlus branding. The copied executable's folder
+contains `navigation-check-results.txt` and screenshots.
+
+## Field validation
+
+Run `./verification/Build-ValidationChecks.ps1` from `src` on Windows. It builds
+a temporary app copy with a separate sample database. Checks submit the native
+forms with missing or invalid values, correct individual fields, and verify
+patient, treatment and payment saves. They also cover setup, unlock, visits,
+password settings, operator and examination dialogs, plus light/dark screenshots
+of patient messages beside their inputs. Results are in
+`validation-check-results.txt` beside the copied executable. Real clinic data is
+untouched.
+
 ## Global search
 
 Run `./verification/Build-SearchChecks.ps1` from `src` on Windows. It builds a

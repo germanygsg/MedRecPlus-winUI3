@@ -5,26 +5,21 @@
     <Grid Padding="24,0,24,24" RowSpacing="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <AutoSuggestBox x:Name="ResultsSearchBox" MinWidth="280" MaxWidth="516" HorizontalAlignment="Stretch"
-                        PlaceholderText="Search patients, appointments, invoices…"
-                        AutomationProperties.Name="Search all records" QueryIcon="Find"
-                        QuerySubmitted="ResultsSearchBox_QuerySubmitted" />
-        <StackPanel Grid.Row="1" Spacing="8">
+        <StackPanel Spacing="8">
             <ProgressRing x:Name="SearchProgress" IsActive="False" Visibility="Collapsed"
                           Width="24" Height="24" HorizontalAlignment="Left" />
             <TextBlock x:Name="SummaryText" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
             <Button x:Name="RetryButton" Content="Retry search" Visibility="Collapsed" Click="Retry_Click" />
         </StackPanel>
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="ResultGroups">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Spacing="8" Margin="0,0,0,24">
                             <TextBlock Text="{Binding Heading}" FontSize="20" FontWeight="SemiBold"
-                                       AutomationProperties.HeadingLevel="Level2" />
+                                       AutomationProperties.HeadingLevel="Level2" TextWrapping="Wrap" />
                             <ListView ItemsSource="{Binding Items}" SelectionMode="None"
                                       IsItemClickEnabled="True" ItemClick="Result_Click">
                                 <ListView.ItemTemplate>

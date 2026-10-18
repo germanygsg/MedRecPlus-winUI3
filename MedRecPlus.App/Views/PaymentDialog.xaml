@@ -8,17 +8,23 @@
     DefaultButton="Primary"
     Style="{StaticResource AppDialogStyle}">
 
-    <StackPanel Spacing="10" MinWidth="380">
-        <TextBlock x:Name="BalanceText" FontWeight="SemiBold" />
-        <NumberBox x:Name="AmountBox" Header="Amount (Rp) *" Minimum="1" />
-        <ComboBox x:Name="MethodBox" Header="Method" HorizontalAlignment="Stretch" SelectedIndex="0">
-            <ComboBoxItem Content="Cash" Tag="cash" />
-            <ComboBoxItem Content="Transfer" Tag="transfer" />
-            <ComboBoxItem Content="QRIS" Tag="qris" />
-            <ComboBoxItem Content="Card" Tag="card" />
-            <ComboBoxItem Content="Other" Tag="other" />
-        </ComboBox>
+    <StackPanel Spacing="10">
+        <TextBlock x:Name="BalanceText" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock x:Name="ErrorText" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+        <StackPanel Spacing="4">
+            <NumberBox x:Name="AmountBox" Header="Amount (Rp) *" Minimum="1" />
+            <TextBlock x:Name="AmountBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Spacing="4">
+            <ComboBox x:Name="MethodBox" Header="Method" HorizontalAlignment="Stretch" SelectedIndex="0">
+                <ComboBoxItem Content="Cash" Tag="cash" />
+                <ComboBoxItem Content="Transfer" Tag="transfer" />
+                <ComboBoxItem Content="QRIS" Tag="qris" />
+                <ComboBoxItem Content="Card" Tag="card" />
+                <ComboBoxItem Content="Other" Tag="other" />
+            </ComboBox>
+            <TextBlock x:Name="MethodBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+        </StackPanel>
         <TextBox x:Name="NoteBox" Header="Note" />
-        <TextBlock x:Name="ErrorText" Foreground="Red" TextWrapping="Wrap" Visibility="Collapsed" />
     </StackPanel>
 </ContentDialog>

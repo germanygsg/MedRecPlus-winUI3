@@ -7,7 +7,12 @@ namespace MedRecPlus.App.Views;
 
 public sealed partial class UnlockPage : Page
 {
-    public UnlockPage() => InitializeComponent();
+    private readonly FormValidation _validation = new();
+    public UnlockPage()
+    {
+        InitializeComponent();
+        _validation.Add(PasswordBox, PasswordBoxError, () => string.IsNullOrEmpty(PasswordBox.Password) ? "Enter your password." : null);
+    }
 
     private void PasswordBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
@@ -71,22 +76,14 @@ public sealed partial class UnlockPage : Page
     private void TryUnlock()
     {
         ErrorText.Visibility = Visibility.Collapsed;
-        if (string.IsNullOrEmpty(PasswordBox.Password))
-        {
-            ErrorText.Text = "Enter your password.";
-            ErrorText.Visibility = Visibility.Visible;
-            PasswordBox.Focus(FocusState.Programmatic);
-            return;
-        }
+        if (!_validation.Validate()) return;
         try
         {
             var db = AppData.Unlock(PasswordBox.Password);
             if (db == null)
             {
-                ErrorText.Text = "Wrong password.";
-                ErrorText.Visibility = Visibility.Visible;
                 PasswordBox.Password = "";
-                PasswordBox.Focus(FocusState.Programmatic);
+                _validation.Show(PasswordBox, "Wrong password.");
                 return;
             }
             // Actor: first operator's name (single-user v1).

@@ -8,10 +8,16 @@
     DefaultButton="Primary"
     Style="{StaticResource AppDialogStyle}">
 
-    <StackPanel Spacing="10" MinWidth="360">
-        <TextBox x:Name="NameBox" Header="Name *" />
+    <StackPanel Spacing="10">
+        <TextBlock x:Name="ErrorText" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+        <StackPanel Spacing="4">
+            <TextBox x:Name="NameBox" Header="Name *" />
+            <TextBlock x:Name="NameBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+        </StackPanel>
         <TextBox x:Name="DescBox" Header="Description" />
-        <TextBox x:Name="PriceBox" Header="Price (Rp) *" PlaceholderText="e.g. 300000" InputScope="Number" />
-        <TextBlock x:Name="ErrorText" Foreground="Red" TextWrapping="Wrap" Visibility="Collapsed" />
+        <StackPanel Spacing="4">
+            <TextBox x:Name="PriceBox" Header="Price (Rp) *" PlaceholderText="e.g. 300000" InputScope="Number" />
+            <TextBlock x:Name="PriceBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+        </StackPanel>
     </StackPanel>
 </ContentDialog>

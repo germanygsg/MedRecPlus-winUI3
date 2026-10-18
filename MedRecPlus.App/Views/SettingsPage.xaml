@@ -1,15 +1,19 @@
 <Page
     x:Class="MedRecPlus.App.Views.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MedRecPlus.App">
 
     <ScrollViewer Padding="24,0,24,24">
         <StackPanel Spacing="16">
 
             <Border Style="{StaticResource CardBorder}" Padding="16">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Clinic profile" FontWeight="SemiBold" FontSize="16" />
-                    <TextBox x:Name="ClinicNameBox" Header="Clinic name" />
+                    <TextBlock Text="Clinic profile" FontWeight="SemiBold" FontSize="16" TextWrapping="Wrap" />
+                    <StackPanel Spacing="4">
+                        <TextBox x:Name="ClinicNameBox" Header="Clinic name *" />
+                        <TextBlock x:Name="ClinicNameBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
                     <TextBox x:Name="HeaderBox" Header="Receipt header" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
                     <TextBox x:Name="FooterBox" Header="Receipt footer" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
                     <Button Content="Save clinic profile" Click="SaveClinic_Click" />
@@ -18,35 +22,38 @@
 
             <Border Style="{StaticResource CardBorder}" Padding="16">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Tax" FontWeight="SemiBold" FontSize="16" />
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <TextBlock Text="Tax" FontWeight="SemiBold" FontSize="16" TextWrapping="Wrap" />
+                    <local:AdaptiveGrid ColumnSpacing="8" Columns="3" MinimumColumnWidth="140">
+
                         <TextBox x:Name="TaxLabelBox" Header="Tax label" />
-                        <ComboBox x:Name="TaxTypeBox" Grid.Column="1" Header="Tax type" HorizontalAlignment="Stretch">
+                        <ComboBox x:Name="TaxTypeBox" Header="Tax type" HorizontalAlignment="Stretch">
                             <ComboBoxItem Content="None" Tag="none" />
                             <ComboBoxItem Content="Percent %" Tag="percent" />
                             <ComboBoxItem Content="Fixed (Rp)" Tag="fixed" />
                         </ComboBox>
-                        <NumberBox x:Name="TaxValueBox" Grid.Column="2" Header="Tax value" Minimum="0" />
-                    </Grid>
+                        <StackPanel Spacing="4">
+                            <NumberBox x:Name="TaxValueBox" Header="Tax value" Minimum="0" />
+                            <TextBlock x:Name="TaxValueBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </local:AdaptiveGrid>
                     <Button Content="Save tax settings" Click="SaveTax_Click" />
                 </StackPanel>
             </Border>
 
             <Border Style="{StaticResource CardBorder}" Padding="16">
                 <StackPanel Spacing="10">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="Operators" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" />
+                    <local:WrapPanel Spacing="8">
+                        <TextBlock Text="Operators" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" TextWrapping="Wrap" />
                         <Button Content="Add" Click="AddOperator_Click" />
-                    </StackPanel>
+                    </local:WrapPanel>
                     <ListView x:Name="OperatorList" SelectionMode="None">
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Display}" VerticalAlignment="Center" />
-                                    <Button Grid.Column="1" Content="Delete" Click="DeleteOperator_Click" Tag="{Binding Id}" />
-                                </Grid>
+                                <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
+
+                                    <TextBlock Text="{Binding Display}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                    <Button Content="Delete" ContentTemplate="{StaticResource DeleteButtonContentTemplate}" Click="DeleteOperator_Click" Tag="{Binding Id}" />
+                                </local:AdaptiveGrid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
@@ -55,21 +62,19 @@
 
             <Border Style="{StaticResource CardBorder}" Padding="16">
                 <StackPanel Spacing="10">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="Treatments" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" />
+                    <local:WrapPanel Spacing="8">
+                        <TextBlock Text="Treatments" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" TextWrapping="Wrap" />
                         <Button Content="Add" Click="AddTreatment_Click" />
-                    </StackPanel>
+                    </local:WrapPanel>
                     <ListView x:Name="TreatmentList" SelectionMode="None">
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" /><ColumnDefinition Width="110" /><ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
+                                <local:AdaptiveGrid ColumnSpacing="8" Columns="3" MinimumColumnWidth="140">
+
                                     <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                    <TextBlock Grid.Column="1" Text="{Binding Price}" VerticalAlignment="Center" HorizontalAlignment="Right" />
-                                    <Button Grid.Column="2" Content="Delete" Click="DeleteTreatment_Click" Tag="{Binding Id}" />
-                                </Grid>
+                                    <TextBlock Text="{Binding Price}" VerticalAlignment="Center" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                    <Button Content="Delete" ContentTemplate="{StaticResource DeleteButtonContentTemplate}" Click="DeleteTreatment_Click" Tag="{Binding Id}" />
+                                </local:AdaptiveGrid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
@@ -78,18 +83,18 @@
 
             <Border Style="{StaticResource CardBorder}" Padding="16">
                 <StackPanel Spacing="10">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="Custom examinations" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" />
+                    <local:WrapPanel Spacing="8">
+                        <TextBlock Text="Custom examinations" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" TextWrapping="Wrap" />
                         <Button Content="Add" Click="AddExam_Click" />
-                    </StackPanel>
+                    </local:WrapPanel>
                     <ListView x:Name="ExamList" SelectionMode="None">
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Display}" VerticalAlignment="Center" />
-                                    <Button Grid.Column="1" Content="Delete" Click="DeleteExam_Click" Tag="{Binding Id}" />
-                                </Grid>
+                                <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
+
+                                    <TextBlock Text="{Binding Display}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                    <Button Content="Delete" ContentTemplate="{StaticResource DeleteButtonContentTemplate}" Click="DeleteExam_Click" Tag="{Binding Id}" />
+                                </local:AdaptiveGrid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
@@ -98,17 +103,17 @@
 
             <Border Style="{StaticResource CardBorder}" Padding="16">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Backups" FontWeight="SemiBold" FontSize="16" />
+                    <TextBlock Text="Backups" FontWeight="SemiBold" FontSize="16" TextWrapping="Wrap" />
                     <TextBlock Text="Encrypted copies of the whole database, stored on this PC." Opacity="0.6" TextWrapping="Wrap" />
                     <Button Content="Create backup now" Click="BackupNow_Click" Style="{StaticResource AccentButtonStyle}" />
                     <ListView x:Name="BackupList" SelectionMode="None">
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                                    <Button Grid.Column="1" Content="Restore" Click="RestoreBackup_Click" Tag="{Binding Path}" />
-                                </Grid>
+                                <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
+
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                    <Button Content="Restore" Click="RestoreBackup_Click" Tag="{Binding Path}" />
+                                </local:AdaptiveGrid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
@@ -117,11 +122,20 @@
 
             <Border Style="{StaticResource CardBorder}" Padding="16">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Change password" FontWeight="SemiBold" FontSize="16" />
-                    <PasswordBox x:Name="CurrentPwBox" Header="Current password" />
-                    <PasswordBox x:Name="NewPwBox" Header="New password" />
-                    <PasswordBox x:Name="ConfirmPwBox" Header="Confirm new password" />
-                    <TextBlock x:Name="PwError" Foreground="Red" Visibility="Collapsed" TextWrapping="Wrap" />
+                    <TextBlock Text="Change password" FontWeight="SemiBold" FontSize="16" TextWrapping="Wrap" />
+                    <TextBlock x:Name="PwError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                    <StackPanel Spacing="4">
+                        <PasswordBox x:Name="CurrentPwBox" Header="Current password *" />
+                        <TextBlock x:Name="CurrentPwBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <PasswordBox x:Name="NewPwBox" Header="New password *" />
+                        <TextBlock x:Name="NewPwBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <PasswordBox x:Name="ConfirmPwBox" Header="Confirm new password *" />
+                        <TextBlock x:Name="ConfirmPwBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
                     <Button Content="Change password" Click="ChangePw_Click" />
                 </StackPanel>
             </Border>

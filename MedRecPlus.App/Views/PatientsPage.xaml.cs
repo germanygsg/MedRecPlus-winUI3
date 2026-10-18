@@ -9,30 +9,22 @@ public sealed partial class PatientsPage : Page
 {
     public ObservableCollection<PatientRow> Rows { get; } = new();
 
-    private bool _loaded;
-
     public PatientsPage()
     {
         InitializeComponent();
         PatientList.ItemsSource = Rows;
-        Loaded += (_, _) => { _loaded = true; Refresh(); };
+        Loaded += (_, _) => Refresh();
     }
 
     private void Refresh()
     {
         Rows.Clear();
-        foreach (var p in AppSession.Patients.Search(SearchBox.Text.Trim(), 100))
+        foreach (var p in AppSession.Patients.Search("", 100))
             Rows.Add(new PatientRow
             {
                 Id = p.Id, RecordNumber = p.RecordNumber,
                 Name = p.Name, Age = p.Age.ToString(), Phone = p.PhoneNumber ?? "",
             });
-    }
-
-    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (!_loaded) return;
-        Refresh();
     }
 
     private async void Add_Click(object sender, RoutedEventArgs e)
@@ -64,6 +56,7 @@ public sealed partial class PatientsPage : Page
             Title = "Delete patient?",
             Content = "This soft-deletes the patient (hidden, recoverable via restore). For permanent erasure use the patient details page.",
             PrimaryButtonText = "Delete",
+            PrimaryButtonStyle = (Style)Application.Current.Resources["DeleteConfirmationButtonStyle"],
             CloseButtonText = "Cancel",
             XamlRoot = XamlRoot,
         };
