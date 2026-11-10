@@ -1,5 +1,18 @@
 # Native app checks
 
+The [2026-11-10 repository synchronization check](Repository-Sync-2026-11-10.md)
+records the current build and runtime blockers. Earlier passing runs below and
+in the linked reports are historical results, not a successful rerun on that date.
+
+## Security settings and Excel exports
+
+Run `./verification/Build-UpdateChecks.ps1` from `src`. It builds and runs an
+isolated encrypted sample clinic with its own Windows vault resource. Use
+`-FullIdleWait` for the 330-second production idle-lock test or `-Preview` to
+leave the sample Reports page open for manual export inspection. No test hooks
+are included in the shipped app. See [Updates.md](Updates.md) for the full
+verification record, export definitions and remaining acceptance checks.
+
 ## Column visibility and resizing
 
 Run `./verification/Build-ColumnChecks.ps1` from `src` on Windows. It uses a
@@ -36,6 +49,12 @@ password settings, operator and examination dialogs, plus light/dark screenshots
 of patient messages beside their inputs. Results are in
 `validation-check-results.txt` beside the copied executable. Real clinic data is
 untouched.
+
+Visit editing checks cover prefilled fields, cancel/save, patient/operator changes,
+treatment selection and historical prices/notes, removed catalog entries, custom
+examinations, diagnoses, fixed/percent/removed discounts, detail refresh and invoice
+freezing (including an invoice generated while editing). The sample app writes
+`visit-edit-light.png`, `visit-edit-dark.png` and `visit-edit-saved.png`.
 
 ## Global search
 

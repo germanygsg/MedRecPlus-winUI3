@@ -44,9 +44,17 @@ entirely on the clinic PC: **no internet, no cloud, no accounts, no sync.**
   password. Creates the Argon2id salt and the SQLCipher-encrypted database,
   seeds the clinic profile and the first operator (Admin). Password policy is
   enforced (min 8 chars, upper + lower + digit + special).
-- **Unlock** (`Views/UnlockPage`): password prompt on every launch once a
+- **Unlock** (`Views/UnlockPage`): password prompt on every launch by default once a
   database exists. Wrong passwords are rejected; an empty password shows
   "Enter your password." instead of leaking a crypto error.
+- **Security settings**: inactivity lock defaults to 15 minutes, with Never /
+  5 / 10 / 15 / 30 / 60 minute choices. Pointer and keyboard input, including
+  inside dialogs, resets the timer. Locking records an audit event, ends the
+  session, and replaces the native window so open dialogs cannot expose data.
+- **Optional password-free startup**: after confirming the current password,
+  the DB key can be saved in Windows Credential Locker. The database stays
+  encrypted; anyone using this Windows account can open it. This disables
+  inactivity locking. Re-enabling the password removes the saved key.
 - **Emergency unlock**: a "Forgot password? Emergency unlock (wipes all data)"
   link on the lock screen. Because the database is encrypted with a
   password-derived key, a forgotten password is cryptographically
@@ -87,6 +95,9 @@ typeface (bundled under `MedRecPlus.App/Assets/Fonts/`).
   custom examinations, and invoice-level discount.
 - Visit detail page (`Views/VisitDetailPage`): vitals, diagnoses, treatments,
   notes; treatment notes are editable.
+- **Edit visit** reopens the visit form with its saved values until invoicing.
+  Saving updates the same record and totals, retaining historical treatment
+  prices/notes and examination values; Cancel discards visit changes.
 - **Visit freeze**: once an invoice is generated for a visit, the visit
   becomes read-only — later edits can't rewrite issued invoices.
 
@@ -124,8 +135,12 @@ Native WinUI printing (`InvoicePrinter.cs`, `InvoicePaperLayout.cs`):
 
 ### Reports
 
-Basic reports page (`Views/ReportsPage`): revenue/visit summaries. Charts and
-Excel (`.xlsx`) export are **not yet implemented**.
+Reports (`Views/ReportsPage`) includes revenue/visit summaries and two offline
+Excel (`.xlsx`) exports: full clinic data (Patients, Visits, Invoices, Payments)
+and annual operator performance, for all operators or one selected operator.
+Export builds run in the background. Money and dates are numeric/date cells;
+phone and record numbers stay text. Deleted records are excluded.
+See [export definitions and verification](verification/Updates.md).
 
 ### AI Insights
 
@@ -229,7 +244,8 @@ Core: `Microsoft.Data.Sqlite.Core` 10.0.12,
 
 - **Encryption**: whole-database SQLCipher encryption; the 32-byte key is
   derived from the password via Argon2id with a per-database salt
-  (`medrec.salt`). No key is stored anywhere.
+  (`medrec.salt`). With password protection enabled, no key is persisted.
+  Optional password-free startup stores a copy in Windows Credential Locker.
 - **Wrong password**: decryption fails with "file is not a database" —
   surfaced as "Wrong password."
 - **No recovery**: there is no password reset. The emergency-wipe flow on
@@ -239,7 +255,7 @@ Core: `Microsoft.Data.Sqlite.Core` 10.0.12,
 - **Backups are encrypted** (same SQLCipher key) — a stolen backup file is
   useless without the password.
 - **Single operator** (v1): no user accounts, no roles, no network auth.
-- **Not yet implemented**: inactivity auto-lock, failed-attempt lockout,
+- **Not yet implemented**: failed-attempt lockout,
   activity-log viewer UI.
 
 ---
@@ -322,6 +338,7 @@ All state lives under `%LOCALAPPDATA%\MedRecPlusOffline\`:
 |---|---|
 | `medrec.db` | Encrypted clinic database |
 | `medrec.salt` | Argon2id salt |
+| `app.json` | Pre-unlock password/idle-lock preferences; contains no keys |
 | `attachments\` | Patient attachment files |
 | `backups\` | Encrypted backups (latest 30) |
 
@@ -333,7 +350,7 @@ To start completely fresh, stop the app and delete this folder.
 
 ### Smoke tests
 
-`MedRecPlus.SmokeTest` — console harness, **31/31 passing** on H410M:
+`MedRecPlus.SmokeTest` — console harness, **126 checks passing** on H410M:
 
 Argon2id hash/verify · SQLCipher create/unlock · wrong-password rejection ·
 patient numbering (`PT2026000001`) · invoice numbering (`INV-202610-0001`) ·
@@ -342,6 +359,11 @@ arithmetic · audit hash-chain verification + tamper detection · no patient
 plaintext in raw encrypted DB bytes · persistence across reopen · global-search
 regression checks (current/saved names, related records, deletion, literal
 terms, pagination).
+
+Also covers local security settings, the Windows vault, silent startup and
+fallback, password rotation, wipe cleanup, rejection of wrong keys with an
+already-open database, session revocation, both Excel exports, date filters,
+cross-year receipts, numeric/text types and worksheet-name collisions.
 
 ### Native UI verification scripts (`verification/`)
 
@@ -361,6 +383,9 @@ See `verification/README.md` for details:
 - `Build-InvoiceChecks.ps1` — receipt layout at exactly 120 × 138 mm,
   frozen settings, monetary totals, partial payment, pagination, legacy
   receipts, receipt-designer controls
+- `Build-UpdateChecks.ps1` — native idle timers, lock settings, password-toggle
+  verification, startup paths, audit/session teardown, abandoned dialogs, and
+  Reports export controls; `-FullIdleWait` adds the real five-minute idle wait
 
 ### Manual E2E (WinRemote, 2026-10-14)
 
@@ -379,10 +404,10 @@ Things that are cut, stubbed, or planned but not built:
 - **PDF export** — receipts print through the Windows driver; no PDF library
   is integrated yet.
 - **Scheduled automatic backups** — backup is manual only ("Create backup now").
-- **Reports** — basic summaries only; no charts, no Excel export.
+- **Reports** — summaries and Excel export; report charts remain unimplemented.
 - **Edit flows** — operators, treatments, and custom examinations are
-  add/delete only; full Edit Visit is still a placeholder.
-- **Security hardening** — no inactivity auto-lock, no failed-attempt
+  add/delete only.
+- **Security hardening** — no failed-attempt
   lockout, no activity-log viewer UI (audit events are recorded, just not
   browsable).
 - **Attachments** — no appointment attachments; patient attachment
