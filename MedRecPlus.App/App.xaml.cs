@@ -56,4 +56,24 @@ public partial class App : Application
         // A redirected second launch lands here: just bring the window forward.
         _window?.Activate();
     }
+
+    internal void ShowLockedShell(MainWindow previous)
+    {
+        var position = previous.AppWindow.Position;
+        var size = previous.AppWindow.Size;
+        var visible = previous.AppWindow.IsVisible;
+        var state = (previous.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter)?.State;
+        var next = new MainWindow();
+        _window = next;
+        next.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(position.X, position.Y, size.Width, size.Height));
+        next.ShowUnlockScreen("Locked due to inactivity.");
+        next.Activate();
+        if (next.AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+        {
+            if (state == Microsoft.UI.Windowing.OverlappedPresenterState.Minimized) presenter.Minimize();
+            else if (state == Microsoft.UI.Windowing.OverlappedPresenterState.Maximized) presenter.Maximize();
+        }
+        if (!visible) next.AppWindow.Hide();
+        previous.Close();
+    }
 }

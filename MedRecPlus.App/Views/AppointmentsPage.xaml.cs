@@ -57,7 +57,7 @@ public sealed partial class AppointmentsPage : Page
             // Let the page finish rendering before showing the modal dialog.
             await Task.Delay(100);
             var dlg = new VisitDialog(pid) { XamlRoot = XamlRoot };
-            await dlg.ShowAsync();
+            await Dialogs.Show(dlg);
             if (dlg.Tag as string == "saved") Refresh();
             _preselectPatientId = null;
             System.IO.File.AppendAllText(System.IO.Path.Combine(AppData.BaseDir, "dlg.log"), "AutoOpen done\n");
@@ -210,7 +210,7 @@ public sealed partial class AppointmentsPage : Page
     private async void NewVisit_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new VisitDialog(_preselectPatientId) { XamlRoot = XamlRoot };
-        await dlg.ShowAsync();
+        await Dialogs.Show(dlg);
         if (dlg.Tag as string == "saved") Refresh();
     }
 

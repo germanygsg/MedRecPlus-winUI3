@@ -59,4 +59,17 @@ public static class AppSession
     {
         Start(newDb, Actor);
     }
+
+    public static void End()
+    {
+        IsReady = false;
+        Db?.Revoke();
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        Db = null!;
+        Actor = "operator";
+        Patients = null!; Operators = null!; Treatments = null!; CustomExams = null!;
+        Visits = null!; Invoices = null!; Appointments = null!; InvoiceRecords = null!;
+        Payments = null!; Attachments = null!; Backups = null!; Ai = null!; Icd = null!;
+        Settings = null!; Numbering = null!; Audit = null!; Search = null!;
+    }
 }

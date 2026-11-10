@@ -18,7 +18,14 @@ public sealed class Database
     }
 
     private readonly string _dbPath;
-    private readonly string _keyHex;
+    private string _keyHex;
+    private volatile bool _revoked;
+    private readonly object _lifecycle = new();
+
+    public void Revoke()
+    {
+        lock (_lifecycle) { _revoked = true; _keyHex = ""; }
+    }
 
     public Database(string dbPath, string keyHex)
     {
@@ -33,7 +40,14 @@ public sealed class Database
 
     /// <summary>Opens another database file with this instance's key
     /// (used to verify backups).</summary>
-    public Database ForPath(string dbPath) => new(dbPath, _keyHex);
+    public Database ForPath(string dbPath)
+    {
+        lock (_lifecycle)
+        {
+            ObjectDisposedException.ThrowIf(_revoked, this);
+            return new(dbPath, _keyHex);
+        }
+    }
 
     /// <summary>Changes the encryption key (SQLCipher rekey). The instance keeps
     /// working only if the caller also swaps to the new key afterwards.</summary>
@@ -46,10 +60,24 @@ public sealed class Database
     /// <summary>Opens a keyed connection. Throws if the key is wrong.</summary>
     public SqliteConnection Open()
     {
+        lock (_lifecycle)
+        {
+            ObjectDisposedException.ThrowIf(_revoked, this);
+            return OpenKeyedConnection();
+        }
+    }
+
+    private SqliteConnection OpenKeyedConnection()
+    {
         var csb = new SqliteConnectionStringBuilder
         {
             DataSource = _dbPath,
             Mode = SqliteOpenMode.ReadWriteCreate,
+            // Pool identity previously contained only the path. Reusing a handle
+            // already decrypted with key A made a later PRAGMA key B a no-op,
+            // accepting wrong passwords while A's handle was pooled. Each open
+            // must validate its own key; closing must release key-bearing handles.
+            Pooling = false,
         };
         var conn = new SqliteConnection(csb.ToString());
         conn.Open();

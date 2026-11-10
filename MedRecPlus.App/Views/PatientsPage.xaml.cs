@@ -8,6 +8,7 @@ namespace MedRecPlus.App.Views;
 
 public sealed partial class PatientsPage : Page
 {
+    // TODO: Add current-search Excel export when filtered per-page exports enter scope.
     public ObservableCollection<PatientRow> Rows { get; } = new();
 
     private bool _initialized;
@@ -137,7 +138,7 @@ public sealed partial class PatientsPage : Page
     {
         var dlg = new PatientDialog();
         dlg.XamlRoot = XamlRoot;
-        await dlg.ShowAsync();
+        await Dialogs.Show(dlg);
         if (dlg.Tag as string == "saved")
             Refresh();
     }
@@ -148,7 +149,7 @@ public sealed partial class PatientsPage : Page
         {
             var dlg = new PatientDialog(id);
             dlg.XamlRoot = XamlRoot;
-            await dlg.ShowAsync();
+            await Dialogs.Show(dlg);
             if (dlg.Tag as string == "saved")
                 Refresh();
         }
@@ -166,7 +167,7 @@ public sealed partial class PatientsPage : Page
             CloseButtonText = "Cancel",
             XamlRoot = XamlRoot,
         };
-        if (await confirm.ShowAsync() == ContentDialogResult.Primary)
+        if (await Dialogs.Show(confirm) == ContentDialogResult.Primary)
         {
             AppSession.Patients.SoftDelete(id);
             Refresh();
@@ -186,7 +187,7 @@ public sealed partial class PatientsPage : Page
             CloseButtonText = "Cancel",
             XamlRoot = XamlRoot,
         };
-        if (await confirm.ShowAsync() == ContentDialogResult.Primary)
+        if (await Dialogs.Show(confirm) == ContentDialogResult.Primary)
         {
             foreach (var id in ids)
                 AppSession.Patients.SoftDelete(id);

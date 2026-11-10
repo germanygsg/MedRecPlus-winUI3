@@ -8,6 +8,30 @@
         <StackPanel Spacing="16">
 
             <Border Style="{StaticResource CardBorder}" Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Export" FontWeight="SemiBold" FontSize="16" />
+                    <TextBlock Text="Save clinic records or annual operator performance as an Excel workbook." TextWrapping="Wrap" Opacity="0.7" />
+                    <Button x:Name="DataExportButton" Click="ExportData_Click" Style="{StaticResource AccentButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ProgressRing x:Name="DataExportProgress" IsActive="False" Visibility="Collapsed" Width="18" Height="18" />
+                            <TextBlock Text="Export data (Excel)" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Button>
+                    <local:WrapPanel Spacing="8">
+                        <ComboBox x:Name="ExportYearBox" Header="Year" />
+                        <ComboBox x:Name="ExportOperatorBox" Header="Operator" MinWidth="180" MaxWidth="320" />
+                    </local:WrapPanel>
+                    <TextBlock Text="Annual totals use visit dates; collections use payment dates, including receipts from earlier years." TextWrapping="Wrap" Opacity="0.7" />
+                    <Button x:Name="OperatorExportButton" Click="ExportOperators_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ProgressRing x:Name="OperatorExportProgress" IsActive="False" Visibility="Collapsed" Width="18" Height="18" />
+                            <TextBlock Text="Export operator performance" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardBorder}" Padding="16">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Operator performance" FontWeight="SemiBold" FontSize="16" TextWrapping="Wrap" />
                     <local:WrapPanel Spacing="8">

@@ -17,10 +17,10 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="CornerRadius" Value="10" />
         </Style>
-        <Style x:Key="SettingsIconBadge" TargetType="Border">
+        <Style x:Key="SettingsIcon" TargetType="FontIcon">
             <Setter Property="Width" Value="36" />
             <Setter Property="Height" Value="36" />
-            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="FontSize" Value="18" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style x:Key="SettingsDescription" TargetType="TextBlock">
@@ -38,9 +38,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Border Style="{StaticResource SettingsIconBadge}" Background="{StaticResource RowActionTintBrush}" Width="44" Height="44">
-                    <FontIcon Glyph="&#xE713;" FontSize="22" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" AutomationProperties.AccessibilityView="Raw" />
-                </Border>
+                <FontIcon Style="{StaticResource SettingsIcon}" Glyph="&#xE713;" FontSize="22" Width="44" Height="44" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" AutomationProperties.AccessibilityView="Raw" />
                 <StackPanel Grid.Column="1" Spacing="4">
                     <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" AutomationProperties.HeadingLevel="Level1" />
                     <TextBlock Text="Manage your clinic preferences and data" Style="{StaticResource SettingsDescription}" />
@@ -55,9 +53,7 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border Style="{StaticResource SettingsIconBadge}" Background="#200EA5E9">
-                                <FontIcon Glyph="&#xE716;" FontSize="18" Foreground="#0EA5E9" AutomationProperties.AccessibilityView="Raw" />
-                            </Border>
+                            <FontIcon Style="{StaticResource SettingsIcon}" Glyph="&#xE716;" Foreground="#0EA5E9" AutomationProperties.AccessibilityView="Raw" />
                             <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                                 <TextBlock Text="Operator management" FontWeight="SemiBold" TextWrapping="Wrap" />
                                 <TextBlock Text="Manage clinic operators and their roles" Style="{StaticResource SettingsDescription}" />
@@ -86,9 +82,7 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border Style="{StaticResource SettingsIconBadge}" Background="#2014B8A6">
-                                <FontIcon Glyph="&#xE95E;" FontSize="18" Foreground="#14B8A6" AutomationProperties.AccessibilityView="Raw" />
-                            </Border>
+                            <FontIcon Style="{StaticResource SettingsIcon}" Glyph="&#xE95E;" Foreground="#14B8A6" AutomationProperties.AccessibilityView="Raw" />
                             <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                                 <TextBlock Text="Treatment management" FontWeight="SemiBold" TextWrapping="Wrap" />
                                 <TextBlock Text="Manage available treatments and their pricing" Style="{StaticResource SettingsDescription}" />
@@ -118,9 +112,7 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border Style="{StaticResource SettingsIconBadge}" Background="#20A855F7">
-                                <FontIcon Glyph="&#xE9F9;" FontSize="18" Foreground="#A855F7" AutomationProperties.AccessibilityView="Raw" />
-                            </Border>
+                            <FontIcon Style="{StaticResource SettingsIcon}" Glyph="&#xE9F9;" Foreground="#A855F7" AutomationProperties.AccessibilityView="Raw" />
                             <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                                 <TextBlock Text="Custom patient examinations" FontWeight="SemiBold" TextWrapping="Wrap" />
                                 <TextBlock Text="Manage custom examination fields for patient appointments" Style="{StaticResource SettingsDescription}" />
@@ -152,9 +144,7 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border Style="{StaticResource SettingsIconBadge}" Background="#20F59E0B">
-                                <FontIcon Glyph="&#xE8D4;" FontSize="18" Foreground="#F59E0B" AutomationProperties.AccessibilityView="Raw" />
-                            </Border>
+                            <FontIcon Style="{StaticResource SettingsIcon}" Glyph="&#xE8D4;" Foreground="#F59E0B" AutomationProperties.AccessibilityView="Raw" />
                             <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                                 <TextBlock Text="Tax settings" FontWeight="SemiBold" TextWrapping="Wrap" />
                                 <TextBlock Text="Set the tax added to invoice totals in rupiah" Style="{StaticResource SettingsDescription}" />
@@ -185,9 +175,7 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border Style="{StaticResource SettingsIconBadge}" Background="#20D99A00">
-                                <FontIcon Glyph="&#xE8A5;" FontSize="18" Foreground="#D99A00" AutomationProperties.AccessibilityView="Raw" />
-                            </Border>
+                            <FontIcon Style="{StaticResource SettingsIcon}" Glyph="&#xE8A5;" Foreground="#D99A00" AutomationProperties.AccessibilityView="Raw" />
                             <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                                 <TextBlock Text="Print receipt setup" FontWeight="SemiBold" TextWrapping="Wrap" />
                                 <TextBlock Text="Customize clinic details, margins, fonts and receipt sections" Style="{StaticResource SettingsDescription}" />
@@ -221,9 +209,7 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border Style="{StaticResource SettingsIconBadge}" Background="#2022C55E">
-                                <FontIcon Glyph="&#xE753;" FontSize="18" Foreground="#22C55E" AutomationProperties.AccessibilityView="Raw" />
-                            </Border>
+                            <FontIcon Style="{StaticResource SettingsIcon}" Glyph="&#xE753;" Foreground="#22C55E" AutomationProperties.AccessibilityView="Raw" />
                             <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                                 <TextBlock Text="Backup &amp; restore" FontWeight="SemiBold" TextWrapping="Wrap" />
                                 <TextBlock Text="Create and restore encrypted backups on this PC" Style="{StaticResource SettingsDescription}" />
@@ -249,6 +235,34 @@
             </StackPanel>
             <StackPanel Spacing="8">
                 <TextBlock Text="SECURITY &amp; ACCESS" Style="{StaticResource SettingsSectionLabel}" />
+                <Expander x:Name="SecurityExpander" Style="{StaticResource SettingsExpander}" AutomationProperties.Name="Security">
+                    <Expander.Header>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon Style="{StaticResource SettingsIcon}" Glyph="&#xE83D;" Foreground="#3B82F6" AutomationProperties.AccessibilityView="Raw" />
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                <TextBlock Text="Security" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Manage app access and automatic locking" Style="{StaticResource SettingsDescription}" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander.Header>
+                    <StackPanel Spacing="12" Padding="16">
+                        <ToggleSwitch x:Name="RequirePasswordSwitch" Header="Require password to open the app" Toggled="RequirePassword_Toggled" />
+                        <TextBlock Text="Anyone who can log in to this Windows account can open the clinic data. Only turn this off if the Windows account itself is secured." TextWrapping="Wrap" Opacity="0.7" />
+                        <ComboBox x:Name="AutoLockBox" Header="Lock after inactivity" SelectionChanged="AutoLock_Changed">
+                            <ComboBoxItem Content="Never" Tag="0" />
+                            <ComboBoxItem Content="5 minutes" Tag="5" />
+                            <ComboBoxItem Content="10 minutes" Tag="10" />
+                            <ComboBoxItem Content="15 minutes" Tag="15" />
+                            <ComboBoxItem Content="30 minutes" Tag="30" />
+                            <ComboBoxItem Content="60 minutes" Tag="60" />
+                        </ComboBox>
+                        <TextBlock x:Name="SecurityStatus" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Expander>
                 <Expander x:Name="PasswordExpander" Style="{StaticResource SettingsExpander}" AutomationProperties.Name="Password and security">
                     <Expander.Header>
                         <Grid ColumnSpacing="12">
@@ -256,9 +270,7 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border Style="{StaticResource SettingsIconBadge}" Background="#20F43F5E">
-                                <FontIcon Glyph="&#xE72E;" FontSize="18" Foreground="#F43F5E" AutomationProperties.AccessibilityView="Raw" />
-                            </Border>
+                            <FontIcon Style="{StaticResource SettingsIcon}" Glyph="&#xE72E;" Foreground="#F43F5E" AutomationProperties.AccessibilityView="Raw" />
                             <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                                 <TextBlock Text="Password and security" FontWeight="SemiBold" TextWrapping="Wrap" />
                                 <TextBlock Text="Change your app password and re-encrypt your database" Style="{StaticResource SettingsDescription}" />

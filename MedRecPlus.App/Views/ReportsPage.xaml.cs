@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text.Json;
 using Dapper;
 using MedRecPlus.Core.Data;
+using MedRecPlus.Core.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -24,10 +25,65 @@ public sealed partial class ReportsPage : Page
         for (var y = now.Year; y >= now.Year - 4; y--)
             YearBox.Items.Add(new ComboBoxItem { Content = y.ToString(), Tag = y });
         YearBox.SelectedIndex = 0;
+        for (var y = Math.Min(2100, now.Year); y >= Math.Max(2000, now.Year - 10); y--)
+            ExportYearBox.Items.Add(new ComboBoxItem { Content = y.ToString(), Tag = y });
+        ExportYearBox.SelectedIndex = 0;
+        ExportOperatorBox.Items.Add(new ComboBoxItem { Content = "All operators" });
+        foreach (var op in AppSession.Operators.GetAll())
+            ExportOperatorBox.Items.Add(new ComboBoxItem { Content = op.Name, Tag = op.Id });
+        ExportOperatorBox.SelectedIndex = 0;
         Loaded += (_, _) => RefreshOperators();
     }
 
     private void Filter_Changed(object sender, object e) => RefreshOperators();
+
+    private async void ExportData_Click(object sender, RoutedEventArgs e)
+    {
+        await SaveExport($"MedRecPlus_Data_{DateTime.Today:yyyy-MM-dd}.xlsx", DataExportProgress, service =>
+        {
+            var result = service.ExportDataPointsWithCounts();
+            return (result.Bytes, $"Exported {result.Patients} patients, {result.Visits} visits, {result.Invoices} invoices.");
+        });
+    }
+
+    private async void ExportOperators_Click(object sender, RoutedEventArgs e)
+    {
+        if (ExportYearBox.SelectedItem is not ComboBoxItem yearItem || ExportOperatorBox.SelectedItem is not ComboBoxItem operatorItem) return;
+        var year = (int)yearItem.Tag;
+        var id = operatorItem.Tag as long?;
+        var name = operatorItem.Content?.ToString() ?? "All operators";
+        var safeName = string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
+        safeName = safeName[..Math.Min(80, safeName.Length)].TrimEnd('.', ' ');
+        await SaveExport($"MedRecPlus_OperatorPerformance_{year}" + (id.HasValue ? $"_{safeName}" : "") + ".xlsx",
+            OperatorExportProgress, service => (service.ExportOperatorPerformance(year, id), $"Exported operator performance for {year}: {name}."));
+    }
+
+    private async Task SaveExport(string filename, ProgressRing progress, Func<ExcelExportService, (byte[] Bytes, string Message)> build)
+    {
+        if (!AppSession.IsReady) return;
+        var sessionDb = AppSession.Db;
+        bool SameSession() => AppSession.IsReady && ReferenceEquals(sessionDb, AppSession.Db);
+        DataExportButton.IsEnabled = OperatorExportButton.IsEnabled = false;
+        try
+        {
+            var path = await Dialogs.SaveFile(XamlRoot, filename, ".xlsx");
+            if (path == null || !SameSession()) return;
+            progress.IsActive = true;
+            progress.Visibility = Visibility.Visible;
+            var export = await Task.Run(() => build(new ExcelExportService(sessionDb)));
+            if (!SameSession()) return; // An export completed after auto-lock: discard its bytes.
+            // Local save is synchronous after the session check: lock cannot interleave it.
+            File.WriteAllBytes(path, export.Bytes);
+            Dialogs.Alert(XamlRoot, "Export complete", export.Message);
+        }
+        catch (Exception ex) { if (SameSession()) Dialogs.Alert(XamlRoot, "Export failed", ex.Message); }
+        finally
+        {
+            progress.IsActive = false;
+            progress.Visibility = Visibility.Collapsed;
+            DataExportButton.IsEnabled = OperatorExportButton.IsEnabled = true;
+        }
+    }
 
     private void RefreshOperators()
     {

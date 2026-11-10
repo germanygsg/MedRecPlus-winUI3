@@ -90,14 +90,14 @@ public sealed partial class DashboardPage : Page
     private async void NewVisit_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new VisitDialog { XamlRoot = XamlRoot };
-        await dialog.ShowAsync();
+        await Dialogs.Show(dialog);
         if (dialog.Tag as string == "saved") Refresh();
     }
 
     private async void AddPatient_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new PatientDialog { XamlRoot = XamlRoot };
-        await dialog.ShowAsync();
+        await Dialogs.Show(dialog);
         if (dialog.Tag as string == "saved") Refresh();
     }
 

@@ -89,7 +89,7 @@ public sealed partial class InvoiceDetailPage : Page
             return;
         }
         var dlg = new PaymentDialog(_invoice) { XamlRoot = XamlRoot };
-        await dlg.ShowAsync();
+        await Dialogs.Show(dlg);
         if (dlg.Tag as string == "saved") Refresh();
     }
 

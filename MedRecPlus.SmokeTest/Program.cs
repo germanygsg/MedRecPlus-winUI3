@@ -23,6 +23,14 @@ var dbPath = Path.Combine(dir, "smoke.db");
 var saltPath = Path.Combine(dir, "smoke.salt");
 const string password = "Smoke-Test-Password-42";
 
+if (args.Contains("--key-isolation"))
+{
+    UpdateChecks.KeyIsolation(dir, Check);
+    Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+    Directory.Delete(dir, true);
+    return failures.Count == 0 ? 0 : 1;
+}
+
 if (args.Contains("--regressions-only"))
 {
     SQLitePCL.Batteries_V2.Init();
@@ -62,6 +70,8 @@ try
     RegressionChecks.RunIcd(dir, Check);
     RegressionChecks.RunRupiah(dir, Check);
     RegressionChecks.RunSearch(dir, Check);
+    UpdateChecks.Run(dir, Check);
+    UpdateChecks.KeyIsolation(dir, Check);
 
     // Raw bytes must not contain the plaintext patient name we'll insert later (encryption check).
     // --- Repositories ---

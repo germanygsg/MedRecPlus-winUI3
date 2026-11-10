@@ -20,6 +20,13 @@ public sealed partial class UnlockPage : Page
             TryUnlock();
     }
 
+    protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        LockMessage.Text = e.Parameter as string ?? "";
+        LockMessage.Visibility = LockMessage.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     private void Unlock_Click(object sender, RoutedEventArgs e) => TryUnlock();
 
     /// <summary>Emergency unlock: after explicit typed confirmation, wipes the
@@ -57,7 +64,7 @@ public sealed partial class UnlockPage : Page
             dialog.IsPrimaryButtonEnabled =
                 confirmBox.Text.Trim().Equals("WIPE", StringComparison.OrdinalIgnoreCase);
 
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+        if (await Dialogs.Show(dialog) != ContentDialogResult.Primary)
             return;
 
         try
@@ -90,6 +97,8 @@ public sealed partial class UnlockPage : Page
             var actor = new MedRecPlus.Core.Data.OperatorRepository(db)
                 .GetAll().FirstOrDefault()?.Name ?? "operator";
             AppSession.Start(db, actor);
+            if (LocalAppSettings.Load().RequirePassword) CredentialStore.DeleteDbKey();
+            PasswordBox.Password = "";
             App.Shell?.EnterShell();
         }
         catch (Exception ex)

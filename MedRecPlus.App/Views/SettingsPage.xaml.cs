@@ -11,6 +11,7 @@ public sealed partial class SettingsPage : Page
     private readonly FormValidation _clinicValidation = new();
     private readonly FormValidation _taxValidation = new();
     private readonly FormValidation _passwordValidation = new();
+    private bool _loadingSecurity = true;
     public ObservableCollection<OpRow> Ops { get; } = new();
     public ObservableCollection<TrRow> Treatments { get; } = new();
     public ObservableCollection<ExamRow> Exams { get; } = new();
@@ -58,6 +59,7 @@ public sealed partial class SettingsPage : Page
 
     private void RefreshInner()
     {
+        RefreshSecurity();
         var clinic = AppSession.Settings.GetOrDefault(SettingKeys.ClinicProfile, new ClinicProfile());
         ClinicNameBox.Text = clinic.Name;
         HeaderBox.Text = clinic.HeaderText;
@@ -89,6 +91,90 @@ public sealed partial class SettingsPage : Page
 
         AboutText.Text = $"MedRecPlus · ICD-11 database: {(AppSession.Icd.IsAvailable ? "bundled" : "not available")} · " +
                          $"Data: {AppData.BaseDir}";
+    }
+
+    private void RefreshSecurity()
+    {
+        _loadingSecurity = true;
+        try
+        {
+            var settings = LocalAppSettings.Load();
+            RequirePasswordSwitch.IsOn = settings.RequirePassword;
+            AutoLockBox.IsEnabled = settings.RequirePassword;
+            var minutes = settings.RequirePassword ? settings.AutoLockMinutes : 0;
+            AutoLockBox.SelectedItem = AutoLockBox.Items.Cast<ComboBoxItem>()
+                .FirstOrDefault(i => (string)i.Tag == minutes.ToString());
+            if (AutoLockBox.SelectedItem == null) AutoLockBox.SelectedIndex = 0;
+        }
+        finally { _loadingSecurity = false; }
+    }
+
+    private void AutoLock_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loadingSecurity || !AppSession.IsReady || AutoLockBox.SelectedItem is not ComboBoxItem item) return;
+        try
+        {
+            LocalAppSettings.Save(LocalAppSettings.Load() with { AutoLockMinutes = int.Parse((string)item.Tag) });
+            App.Shell?.ApplyAutoLockSettings();
+            SecurityStatus.Text = "Security settings saved.";
+        }
+        catch (Exception ex) { SecurityStatus.Text = ex.Message; RefreshSecurity(); }
+    }
+
+    private async void RequirePassword_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_loadingSecurity || !AppSession.IsReady) return;
+        var sessionDb = AppSession.Db;
+        RequirePasswordSwitch.IsEnabled = false;
+        try
+        {
+            var settings = LocalAppSettings.Load();
+            if (RequirePasswordSwitch.IsOn)
+            {
+                LocalAppSettings.Save(settings with { RequirePassword = true });
+                CredentialStore.DeleteDbKey();
+            }
+            else
+            {
+                var password = new PasswordBox { Header = "Current password", MinWidth = 240 };
+                var error = FormValidation.CreateMessage();
+                var dialog = new ContentDialog
+                {
+                    Title = "Turn off the app lock?", PrimaryButtonText = "Turn off", CloseButtonText = "Cancel",
+                    DefaultButton = ContentDialogButton.Close, XamlRoot = XamlRoot,
+                    Content = new StackPanel { Spacing = 8, Children = { password, error } },
+                };
+                string? verifiedKey = null;
+                dialog.PrimaryButtonClick += (_, args) =>
+                {
+                    if (!AppSession.IsReady || !ReferenceEquals(sessionDb, AppSession.Db)) { args.Cancel = true; return; }
+                    if (string.IsNullOrEmpty(password.Password)) { error.Text = "Enter your password."; error.Visibility = Visibility.Visible; args.Cancel = true; return; }
+                    try
+                    {
+                        var key = AppData.DeriveDbKey(password.Password);
+                        if (!new MedRecPlus.Core.Data.Database(AppData.DbPath, key).TryUnlock())
+                            throw new InvalidOperationException("Wrong password.");
+                        verifiedKey = key;
+                    }
+                    catch (Exception) { error.Text = "Wrong password or database unavailable."; error.Visibility = Visibility.Visible; args.Cancel = true; }
+                };
+                var result = await Dialogs.Show(dialog);
+                password.Password = "";
+                if (!AppSession.IsReady || !ReferenceEquals(sessionDb, AppSession.Db)) return;
+                if (result != ContentDialogResult.Primary || verifiedKey == null) return;
+                if (!CredentialStore.SaveDbKey(verifiedKey)) throw new IOException("Windows could not save the key. The app lock remains on.");
+                try { LocalAppSettings.Save(settings with { RequirePassword = false }); }
+                catch { CredentialStore.DeleteDbKey(); throw; }
+            }
+            App.Shell?.ApplyAutoLockSettings();
+            SecurityStatus.Text = "Security settings saved.";
+        }
+        catch (Exception ex) { SecurityStatus.Text = ex.Message; }
+        finally
+        {
+            RequirePasswordSwitch.IsEnabled = true;
+            if (AppSession.IsReady && ReferenceEquals(sessionDb, AppSession.Db)) RefreshSecurity();
+        }
     }
 
     private void SaveClinic_Click(object sender, RoutedEventArgs e)
@@ -153,7 +239,7 @@ public sealed partial class SettingsPage : Page
         var validation = new FormValidation();
         validation.Add(nameBox, nameError, () => FormValidation.Required(nameBox.Text, "Operator name"));
         dlg.PrimaryButtonClick += (_, args) => args.Cancel = !validation.Validate();
-        if (await dlg.ShowAsync() == ContentDialogResult.Primary && nameBox.Text.Trim().Length > 0)
+        if (await Dialogs.Show(dlg) == ContentDialogResult.Primary && nameBox.Text.Trim().Length > 0)
         {
             AppSession.Operators.Create(nameBox.Text.Trim(), roleBox.Text.Trim());
             Refresh();
@@ -173,7 +259,7 @@ public sealed partial class SettingsPage : Page
     private async void AddTreatment_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new TreatmentDialog { XamlRoot = XamlRoot };
-        await dlg.ShowAsync();
+        await Dialogs.Show(dlg);
         if (dlg.Tag as string == "saved") Refresh();
     }
 
@@ -202,7 +288,7 @@ public sealed partial class SettingsPage : Page
         var validation = new FormValidation();
         validation.Add(nameBox, nameError, () => FormValidation.Required(nameBox.Text, "Examination name"));
         dlg.PrimaryButtonClick += (_, args) => args.Cancel = !validation.Validate();
-        if (await dlg.ShowAsync() == ContentDialogResult.Primary && nameBox.Text.Trim().Length > 0)
+        if (await Dialogs.Show(dlg) == ContentDialogResult.Primary && nameBox.Text.Trim().Length > 0)
         {
             AppSession.CustomExams.Create(nameBox.Text.Trim(), unitBox.Text.Trim());
             Refresh();
@@ -250,11 +336,12 @@ public sealed partial class SettingsPage : Page
         if (!_passwordValidation.Validate()) return;
         try
         {
-            var newDb = AppData.ChangePassword(AppSession.Db, CurrentPwBox.Password, NewPwBox.Password);
+            var newDb = AppData.ChangePassword(AppSession.Db, CurrentPwBox.Password, NewPwBox.Password, out var vaultFailed);
             AppSession.Rekey(newDb);
             _passwordValidation.Reset();
             CurrentPwBox.Password = NewPwBox.Password = ConfirmPwBox.Password = "";
-            Dialogs.Alert(XamlRoot, "Done", "Password changed. The database was re-encrypted.");
+            Dialogs.Alert(XamlRoot, "Done", "Password changed. The database was re-encrypted." +
+                (vaultFailed ? " Windows could not update the saved key. Enter your new password on the next launch." : ""));
         }
         catch (InvalidOperationException ex) when (ex.Message == "Current password is incorrect.")
         {

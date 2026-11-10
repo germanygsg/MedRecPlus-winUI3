@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
+using MedRecPlus.App.Security;
 
 namespace MedRecPlus.App;
 
@@ -12,6 +13,8 @@ public sealed partial class MainWindow : Window
     private bool _syncingSelection;
     private object? _currentParameter;
     private CancellationTokenSource? _searchCancellation;
+    private AutoLockService? _autoLock;
+    private bool _isLocking;
 
     private readonly Dictionary<string, Type> _pages = new()
     {
@@ -27,6 +30,11 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         this.InitializeComponent();
+        // Handled input (TextBox typing, button clicks) still counts as activity.
+        ShellRoot.AddHandler(UIElement.PointerMovedEvent, new PointerEventHandler((_, _) => _autoLock?.NotifyActivity()), true);
+        ShellRoot.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, _) => _autoLock?.NotifyActivity()), true);
+        ShellRoot.AddHandler(UIElement.KeyDownEvent, new KeyEventHandler((_, _) => _autoLock?.NotifyActivity()), true);
+        Closed += (_, _) => { _autoLock?.Stop(); if (ReferenceEquals(App.Shell, this)) AppSession.End(); };
         Title = "MedRecPlus";
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
@@ -57,12 +65,30 @@ public sealed partial class MainWindow : Window
         if (AppData.IsFirstRun)
             AuthFrame.Navigate(typeof(SetupPage));
         else
+        {
+            var db = AppData.TrySilentUnlock();
+            if (db != null)
+            {
+                try
+                {
+                    var actor = new MedRecPlus.Core.Data.OperatorRepository(db).GetAll().FirstOrDefault()?.Name ?? "operator";
+                    AppSession.Start(db, actor);
+                    EnterShell();
+                    return;
+                }
+                catch (Exception) { AppSession.End(); }
+            }
             AuthFrame.Navigate(typeof(UnlockPage));
+        }
     }
 
     /// <summary>Called by SetupPage/UnlockPage on success.</summary>
     public void EnterShell()
     {
+        _autoLock?.Stop();
+        _isLocking = false;
+        AuthFrame.Content = null;
+        AuthFrame.BackStack.Clear();
         AuthFrame.Visibility = Visibility.Collapsed;
         NavView.Visibility = Visibility.Visible;
         AppTitleBar.IsBackButtonVisible = false;
@@ -70,6 +96,56 @@ public sealed partial class MainWindow : Window
         ShellSearchHost.Visibility = Visibility.Visible;
         ShellSearchBox.Visibility = Visibility.Visible;
         NavigateTo(typeof(DashboardPage));
+        ApplyAutoLockSettings();
+    }
+
+    public void ApplyAutoLockSettings()
+    {
+        _autoLock?.Stop();
+        _autoLock = null;
+        if (!AppSession.IsReady) return;
+        var settings = LocalAppSettings.Load();
+        if (!settings.RequirePassword || settings.AutoLockMinutes == 0) return;
+        _autoLock = new AutoLockService(TimeSpan.FromMinutes(settings.AutoLockMinutes));
+        _autoLock.AutoLocked += (_, _) => LockDueToInactivity();
+        _autoLock.Start();
+    }
+
+    public void NotifyActivity() => _autoLock?.NotifyActivity();
+
+    private void LockDueToInactivity()
+    {
+        if (_isLocking || !AppSession.IsReady) return;
+        _isLocking = true;
+        _autoLock?.Stop();
+        _searchCancellation?.Cancel();
+        try
+        {
+            AppSession.Audit.Append(AuditEvents.AppLocked, "security", null, AppSession.Actor,
+                new Dictionary<string, object> { ["reason"] = "auto" });
+        }
+        catch (Exception) { /* A failed audit write must not leave data unlocked. */ }
+        AppSession.End();
+        ShellSearchBox.ItemsSource = null;
+        ShellSearchBox.IsSuggestionListOpen = false;
+        ShellSearchBox.Text = "";
+        ShellSearchBox.Visibility = ShellSearchHost.Visibility = SidebarToggleButton.Visibility = Visibility.Collapsed;
+        AppTitleBar.IsBackButtonVisible = false;
+        NavView.Visibility = Visibility.Collapsed;
+        // A ContentDialog survives hiding pages and even swapping Window.Content.
+        // Destroy the old native window and its popup layer. This abandons dialogs
+        // without trying to dismiss or resume their individual workflows.
+        ContentFrame.Content = null;
+        ContentFrame.BackStack.Clear();
+        ContentFrame.ForwardStack.Clear();
+        _currentParameter = null;
+        ((App)Application.Current).ShowLockedShell(this);
+    }
+
+    internal void ShowUnlockScreen(string message)
+    {
+        AuthFrame.Visibility = Visibility.Visible;
+        AuthFrame.Navigate(typeof(UnlockPage), message);
     }
 
     private void AppTitleBar_BackRequested(TitleBar sender, object args) => GoBack();
@@ -116,6 +192,7 @@ public sealed partial class MainWindow : Window
     /// <summary>Navigate the content frame to a page from anywhere (e.g. drill-down).</summary>
     public void NavigateTo(Type pageType, object? parameter = null)
     {
+        if (!AppSession.IsReady) return;
         if (ContentFrame.CurrentSourcePageType == pageType && Equals(_currentParameter, parameter))
             return;
 

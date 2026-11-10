@@ -90,7 +90,7 @@ public sealed partial class PatientDetailPage : Page
     private async void Edit_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new PatientDialog(_patientId) { XamlRoot = XamlRoot };
-        await dlg.ShowAsync();
+        await Dialogs.Show(dlg);
         if (dlg.Tag as string == "saved") Refresh();
     }
 
@@ -139,7 +139,7 @@ public sealed partial class PatientDetailPage : Page
         var p = AppSession.Patients.GetById(_patientId);
         if (p == null) return;
         var dlg = new ErasePatientDialog(p) { XamlRoot = XamlRoot };
-        await dlg.ShowAsync();
+        await Dialogs.Show(dlg);
         if (dlg.Tag as string == "erased")
             App.Shell?.NavigateTo(typeof(PatientsPage));
     }

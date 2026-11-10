@@ -47,6 +47,7 @@ public static class AppData
     /// setup. There is no recovery.</summary>
     public static void WipeAllData()
     {
+        CredentialStore.DeleteDbKey();
         // Pooled SQLite connections (e.g. from a failed unlock attempt) keep
         // the file handle open, which makes File.Delete silently fail on
         // Windows. Drain the pool first.
@@ -75,6 +76,9 @@ public static class AppData
         EnsureCreated();
         if (File.Exists(DbPath)) throw new InvalidOperationException("Database already exists.");
 
+        LocalAppSettings.Save(new SecuritySettings());
+        CredentialStore.DeleteDbKey();
+
         var salt = RandomNumberGenerator.GetBytes(16);
         File.WriteAllBytes(SaltPath, salt);
         var db = new Database(DbPath, PasswordService.DbKeyHex(password, salt));
@@ -95,17 +99,38 @@ public static class AppData
     public static Database? Unlock(string password)
     {
         if (IsFirstRun) throw new InvalidOperationException("No database yet; run setup first.");
-        var salt = File.ReadAllBytes(SaltPath);
-        var db = new Database(DbPath, PasswordService.DbKeyHex(password, salt));
+        var db = new Database(DbPath, DeriveDbKey(password));
         if (!db.TryUnlock()) return null;
         db.Initialize(); // idempotent: creates tables + runs pending migrations
         return db;
     }
 
+    public static string DeriveDbKey(string password) =>
+        PasswordService.DbKeyHex(password, File.ReadAllBytes(SaltPath));
+
+    public static Database? TrySilentUnlock()
+    {
+        try
+        {
+            if (IsFirstRun || LocalAppSettings.Load().RequirePassword ||
+                !CredentialStore.TryGetDbKey(out var key)) return null;
+            var db = new Database(DbPath, key);
+            if (!db.TryUnlock()) return null;
+            db.Initialize();
+            return db;
+        }
+        catch (Exception) { return null; }
+    }
+
     /// <summary>Changes the DB password: verifies the current one, rekeys SQLCipher,
     /// rotates the KDF salt. Returns a Database bound to the new key.</summary>
-    public static Database ChangePassword(Database db, string currentPassword, string newPassword)
+    public static Database ChangePassword(Database db, string currentPassword, string newPassword) =>
+        ChangePassword(db, currentPassword, newPassword, out _);
+
+    public static Database ChangePassword(Database db, string currentPassword, string newPassword,
+        out bool credentialRefreshFailed)
     {
+        credentialRefreshFailed = false;
         PasswordService.ValidatePolicy(newPassword);
         var salt = File.ReadAllBytes(SaltPath);
         var probe = new Database(DbPath, PasswordService.DbKeyHex(currentPassword, salt));
@@ -121,6 +146,11 @@ public static class AppData
         new SettingsService(newDb).Set("password_hash", PasswordService.HashPassword(newPassword));
         new AuditService(newDb).Append(AuditEvents.SecurityIncident, "security", null, "settings",
             new Dictionary<string, object> { ["action"] = "password_changed" });
+        if (CredentialStore.TryGetDbKey(out _) || !LocalAppSettings.Load().RequirePassword)
+        {
+            credentialRefreshFailed = !CredentialStore.SaveDbKey(newKeyHex);
+            if (credentialRefreshFailed) CredentialStore.DeleteDbKey();
+        }
         return newDb;
     }
 }

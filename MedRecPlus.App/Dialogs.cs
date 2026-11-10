@@ -2,6 +2,7 @@
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
 
@@ -9,6 +10,34 @@ namespace MedRecPlus.App;
 
 public static class Dialogs
 {
+    public static async Task<ContentDialogResult> Show(ContentDialog dialog)
+    {
+        // Popups have their own event route. Listen on the dialog too, including
+        // input handled by an editor, so writing a long clinical note is activity.
+        var db = AppSession.IsReady ? AppSession.Db : null;
+        PointerEventHandler pointer = (_, _) => App.Shell?.NotifyActivity();
+        KeyEventHandler key = (_, _) => App.Shell?.NotifyActivity();
+        dialog.AddHandler(UIElement.PointerMovedEvent, pointer, true);
+        dialog.AddHandler(UIElement.PointerPressedEvent, pointer, true);
+        dialog.AddHandler(UIElement.KeyDownEvent, key, true);
+        try
+        {
+            var result = await dialog.ShowAsync();
+            return db != null && (!AppSession.IsReady || !ReferenceEquals(db, AppSession.Db))
+                ? ContentDialogResult.None : result;
+        }
+        catch (Exception) when (db != null && (!AppSession.IsReady || !ReferenceEquals(db, AppSession.Db)))
+        {
+            return ContentDialogResult.None; // Old native window was abandoned by auto-lock.
+        }
+        finally
+        {
+            dialog.RemoveHandler(UIElement.PointerMovedEvent, pointer);
+            dialog.RemoveHandler(UIElement.PointerPressedEvent, pointer);
+            dialog.RemoveHandler(UIElement.KeyDownEvent, key);
+        }
+    }
+
     public static async Task<bool> Confirm(XamlRoot root, string title, string content,
         string ok = "Delete")
     {
@@ -22,7 +51,7 @@ public static class Dialogs
         };
         if (ok == "Delete")
             dlg.PrimaryButtonStyle = (Style)Application.Current.Resources["DeleteConfirmationButtonStyle"];
-        return await dlg.ShowAsync() == ContentDialogResult.Primary;
+        return await Show(dlg) == ContentDialogResult.Primary;
     }
 
     public static void Alert(XamlRoot root, string title, string content)
@@ -34,7 +63,7 @@ public static class Dialogs
             CloseButtonText = "OK",
             XamlRoot = root,
         };
-        _ = dlg.ShowAsync();
+        _ = Show(dlg);
     }
 
     public static async Task<string?> PickImageFile(XamlRoot _)

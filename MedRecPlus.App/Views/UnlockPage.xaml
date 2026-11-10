@@ -12,6 +12,7 @@
                 </StackPanel>
                 <TextBlock Text="Enter your password to unlock the clinic database." TextWrapping="Wrap" Opacity="0.7" />
                 <TextBlock x:Name="ErrorText" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />
+                <TextBlock x:Name="LockMessage" Visibility="Collapsed" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" TextWrapping="Wrap" />
                 <StackPanel Spacing="4">
                     <PasswordBox x:Name="PasswordBox" Header="Password *" KeyDown="PasswordBox_KeyDown" />
                     <TextBlock x:Name="PasswordBoxError" Style="{StaticResource FieldErrorStyle}" TextWrapping="Wrap" />

@@ -8,6 +8,7 @@ namespace MedRecPlus.App.Views;
 
 public sealed partial class InvoicesPage : Page
 {
+    // TODO: Add current-status Excel export when filtered per-page exports enter scope.
     private bool _loaded;
     private int _page = 1;
     private int _pageSize = 10;
