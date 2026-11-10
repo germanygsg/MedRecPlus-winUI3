@@ -29,7 +29,8 @@ public sealed partial class MainWindow
     }
     private static T Field<T>(FrameworkElement root, string name) where T : FrameworkElement => (T)root.FindName(name);
     private static TextBlock FieldMessage(Control field) =>
-        ((Panel)field.Parent).Children.OfType<TextBlock>().Single();
+        ((Panel)field.Parent).Children.OfType<TextBlock>().Single(t =>
+            t.Style == (Style)Application.Current.Resources["FieldErrorStyle"]);
     private static bool HasError(Control field) => FieldMessage(field).Visibility == Visibility.Visible;
     private static void InvokeHandler(object target, string name) =>
         target.GetType().GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(target, [null, new RoutedEventArgs()]);
@@ -74,7 +75,9 @@ public sealed partial class MainWindow
                 [new TreatmentItem { Name = "Consultation", PriceCents = 100000 }], DiscountTypes.None, 0, null, null, null, AppSession.Actor);
             var invoice = AppSession.Invoices.GenerateFromAppointment(visitId, AppSession.Actor);
             EnterShell();
+            AppWindow.Show();
             AppWindow.Resize(new Windows.Graphics.SizeInt32(900, 850));
+            for (var attempt = 0; ShellRoot.XamlRoot == null && attempt < 100; attempt++) await Task.Delay(50);
             await Task.Delay(250);
 
             foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
@@ -157,6 +160,8 @@ public sealed partial class MainWindow
                 CheckValidation(selectedVisit.Tag as string == "saved", "visit saves with a selected patient and operator");
             });
 
+            await RunVisitEditChecks(patientId);
+
             var setup = new SetupPage(); ContentFrame.Content = setup;
             await Task.Delay(100); InvokeHandler(setup, "Setup_Click");
             CheckValidation(new[] { "ClinicNameBox", "OperatorNameBox", "PasswordBox", "ConfirmBox" }
@@ -175,6 +180,9 @@ public sealed partial class MainWindow
 
             NavigateTo(typeof(SettingsPage)); await Task.Delay(100);
             var settings = (SettingsPage)ContentFrame.Content;
+            Field<Expander>(settings, "PasswordExpander").IsExpanded = true;
+            Field<Expander>(settings, "ReceiptExpander").IsExpanded = true;
+            await Task.Delay(250); // Expander content is attached lazily by WinUI.
             InvokeHandler(settings, "ChangePw_Click");
             CheckValidation(new[] { "CurrentPwBox", "NewPwBox", "ConfirmPwBox" }.All(name => HasError(Field<PasswordBox>(settings, name))),
                 "password settings report required values at all three inputs");

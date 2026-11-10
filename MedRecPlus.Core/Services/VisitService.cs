@@ -73,8 +73,27 @@ public sealed class VisitService
     /// <summary>Full edit — only before an invoice exists.</summary>
     public void UpdateVisit(Appointment updated, string actor)
     {
+        var existing = GetVisit(updated.Id);
         if (IsInvoiced(updated.Id))
             throw new InvalidOperationException("Visit is invoiced and frozen; only treatment notes can be edited.");
+
+        using var conn = _db.Open();
+        updated.PatientName = updated.PatientId == existing.PatientId ? existing.PatientName
+            : conn.QueryFirstOrDefault<string>("SELECT name FROM patients WHERE id = @id AND deleted_at IS NULL",
+                new { id = updated.PatientId }) ?? throw new InvalidOperationException("Patient not found.");
+        updated.OperatorName = updated.OperatorId == existing.OperatorId ? existing.OperatorName
+            : conn.QueryFirstOrDefault<string>("SELECT name FROM operators WHERE id = @id AND deleted_at IS NULL",
+                new { id = updated.OperatorId }) ?? throw new InvalidOperationException("Operator not found.");
+        if (updated.DiscountType != DiscountTypes.None && updated.DiscountType != DiscountTypes.Percent && updated.DiscountType != DiscountTypes.Fixed)
+            throw new ArgumentException("Invalid discount type.");
+        if (updated.DiscountValueCents < 0)
+            throw new ArgumentException("Discount cannot be negative.");
+        var treatments = JsonSerializer.Deserialize<List<TreatmentItem>>(updated.TreatmentsJson)
+            ?? throw new ArgumentException("Invalid treatments.");
+        if (treatments.Any(treatment => treatment.PriceCents < 0))
+            throw new ArgumentException("Treatment prices cannot be negative.");
+        updated.TotalPriceCents = treatments.Sum(treatment => treatment.PriceCents);
+        if (updated.DiscountType == DiscountTypes.None) updated.DiscountValueCents = 0;
         _repo.Update(updated);
         _audit.Append(AuditEvents.RecordUpdated, "appointment", updated.Id.ToString(), actor, null);
     }

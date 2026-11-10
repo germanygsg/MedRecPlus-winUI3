@@ -89,8 +89,13 @@ public sealed partial class VisitDetailPage : Page
             Dialogs.Alert(XamlRoot, "Frozen", "This visit is invoiced and frozen. Only treatment notes can be edited.");
             return;
         }
-        Dialogs.Alert(XamlRoot, "Edit visit", "Full visit editing opens here in the next pass — treatment notes can be edited below right now.");
-        await Task.CompletedTask;
+        try
+        {
+            var dialog = new VisitDialog(visitToEdit: AppSession.Visits.GetVisit(_visitId)) { XamlRoot = XamlRoot };
+            await Dialogs.Show(dialog);
+            if (AppSession.IsReady && dialog.Tag as string == "saved") Refresh();
+        }
+        catch (Exception ex) { Dialogs.Alert(XamlRoot, "Edit visit", ex.Message); }
     }
 
     private async void Delete_Click(object sender, RoutedEventArgs e)

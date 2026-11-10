@@ -17,6 +17,7 @@ $startup = $startup.Replace('FindOrRegisterForKey("MedRecPlusOffline")', 'FindOr
 $startup = $startup.Replace('shell.Start();', 'shell.RunValidationChecks();')
 [IO.File]::WriteAllText($startupPath, $startup)
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'ValidationChecks.cs') -Destination (Join-Path $OutputRoot 'MedRecPlus.App\ValidationChecks.cs')
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'VisitEditChecks.cs') -Destination (Join-Path $OutputRoot 'MedRecPlus.App\VisitEditChecks.cs')
 dotnet build (Join-Path $OutputRoot 'MedRecPlus.App\MedRecPlus.App.csproj') -c Debug -p:Platform=x64 -v:quiet
 if ($LASTEXITCODE -ne 0) { throw 'Validation check build failed' }
 $executable = Join-Path $OutputRoot 'MedRecPlus.App\bin\x64\Debug\net10.0-windows10.0.19041.0\MedRecPlus.App.exe'

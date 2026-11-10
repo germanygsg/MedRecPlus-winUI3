@@ -81,10 +81,14 @@
             </local:AdaptiveGrid>
             <StackPanel x:Name="CustomExamsPanel" Spacing="6" />
 
-            <local:WrapPanel Spacing="8">
+            <Grid ColumnSpacing="8" HorizontalAlignment="Left">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
                 <TextBlock Text="Treatments" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
-                <Button Content="New treatment" Click="NewTreatmentToggle_Click" />
-            </local:WrapPanel>
+                <Button Grid.Column="1" Content="New treatment" Click="NewTreatmentToggle_Click" VerticalAlignment="Center" />
+            </Grid>
             <Border x:Name="NewTreatmentForm" Visibility="Collapsed" Style="{StaticResource CardBorder}" Padding="12">
                 <StackPanel Spacing="8">
                     <StackPanel Spacing="4">
@@ -114,15 +118,18 @@
             </ListView>
             <TextBlock x:Name="TotalText" FontWeight="SemiBold" TextWrapping="Wrap" />
 
-            <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140">
-
-                <ComboBox x:Name="DiscountTypeBox" Header="Discount type" HorizontalAlignment="Stretch" SelectedIndex="0">
-                    <ComboBoxItem Content="None" Tag="none" />
-                    <ComboBoxItem Content="Percent %" Tag="percent" />
-                    <ComboBoxItem Content="Fixed (Rp)" Tag="fixed" />
-                </ComboBox>
-                <NumberBox x:Name="DiscountValueBox" Header="Discount value" Minimum="0" />
-            </local:AdaptiveGrid>
+            <Button x:Name="AddDiscountButton" Content="Add Discount" Click="AddDiscount_Click" HorizontalAlignment="Left" />
+            <StackPanel x:Name="DiscountPanel" Spacing="8" Visibility="Collapsed">
+                <local:AdaptiveGrid ColumnSpacing="8" Columns="2" MinimumColumnWidth="140" MaxWidth="360" HorizontalAlignment="Left">
+                    <ComboBox x:Name="DiscountTypeBox" Header="Discount type" HorizontalAlignment="Stretch" SelectedIndex="0">
+                        <ComboBoxItem Content="None" Tag="none" />
+                        <ComboBoxItem Content="Percent %" Tag="percent" />
+                        <ComboBoxItem Content="Fixed (Rp)" Tag="fixed" />
+                    </ComboBox>
+                    <NumberBox x:Name="DiscountValueBox" Header="Discount value" Minimum="0" />
+                </local:AdaptiveGrid>
+                <Button Content="Remove discount" Click="RemoveDiscount_Click" Style="{StaticResource SubtleButtonStyle}" HorizontalAlignment="Left" />
+            </StackPanel>
 
             <TextBox x:Name="NotesBox" Header="Notes" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
         </StackPanel>
